@@ -95,6 +95,13 @@ export function PostConstruct() {
 export function Configuration() {
   return function <T extends Newable>(target: T) {
     Reflect.defineMetadata(META_CONFIGURATION, true, target);
+
+    GlobalRegistry.instance.register({
+      token: target,
+      useClass: target,
+      scope: 'singleton',
+      name: defaultBeanNameFromClass(target),
+    } as Provider);
   };
 }
 
