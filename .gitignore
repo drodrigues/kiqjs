@@ -10,3 +10,4 @@ private
 !.env.example
 .idea/
 .vscode
+__tmp_scan__
