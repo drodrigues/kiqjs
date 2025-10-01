@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+yarn-error.log
+npm-error.log
+tmp
+build
+private
+.env
+.env.*
+!.env.example
+.idea/
+.vscode

@@ -1,0 +1,19 @@
+{
+  "name": "@kiqjs/repository",
+  "description": "Repository abstractions for kiqjs applications. Provides @Repository decorator, CrudRepository interface, and in-memory datasource to simplify data access and persistence layers.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@kiqjs/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {}
+}

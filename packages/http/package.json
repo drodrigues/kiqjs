@@ -1,0 +1,20 @@
+{
+  "name": "@kiqjs/http",
+  "description": "HTTP integration for kiqjs. Provides @RestController and route decorators (@Get, @Post, @Put, @Delete) to map controllers and methods into HTTP endpoints automatically.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@kiqjs/core": "workspace:*"
+  },
+  "dependencies": {},
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,20 @@
+{
+  "name": "kiqjs",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.6.0",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/*\" run build",
+    "dev": "pnpm -F example dev"
+  },
+  "devDependencies": {
+    "eslint": "^9.36.0",
+    "jest": "^30.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
