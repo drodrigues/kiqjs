@@ -10,4 +10,13 @@ module.exports = {
     '^@kiqjs/repository(.*)$': '<rootDir>/packages/repository/src$1',
   },
   setupFilesAfterEnv: [],
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.jest.json', // aponta explicitamente
+        diagnostics: true,
+      },
+    ],
+  },
 };
