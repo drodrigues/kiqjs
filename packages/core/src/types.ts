@@ -22,3 +22,7 @@ export interface ComponentOptions {
   name?: string;
   scope?: Scope;
 }
+
+export interface ValueSource {
+  get(key: string): string | undefined;
+}
