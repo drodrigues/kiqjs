@@ -9,11 +9,15 @@
   ],
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" run build",
-    "dev": "pnpm -F example dev"
+    "dev": "pnpm -F example dev",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "eslint": "^9.36.0",
     "jest": "^30.2.0",
+    "ts-jest": "^29.4.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
