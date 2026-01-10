@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http';
 
 /**
  * DTO for creating a new user

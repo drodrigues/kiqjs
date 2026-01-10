@@ -1,7 +1,5 @@
 import 'reflect-metadata';
-import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
-import { transformAndValidate, formatValidationErrors } from '../src/validation';
-import { HttpError } from '../src/router';
+import { transformAndValidate, formatValidationErrors, HttpError, IsString, IsEmail, MinLength, IsOptional } from '../src/index';
 
 class TestDto {
   @IsString()

@@ -14,8 +14,10 @@ pnpm add @kiqjs/http
 
 ### 1. Define your DTO class
 
+All validation decorators are re-exported from `@kiqjs/http`, so you don't need to install `class-validator` directly:
+
 ```typescript
-import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http';
 
 export class CreateUserDto {
   @IsString()
@@ -84,7 +86,7 @@ When validation fails, the API automatically returns a structured error response
 
 ## Available Decorators
 
-### From class-validator
+All decorators are imported from `@kiqjs/http`:
 
 - `@IsString()` - Validates that the property is a string
 - `@IsNumber()` - Validates that the property is a number
@@ -99,7 +101,11 @@ When validation fails, the API automatically returns a structured error response
 - `@IsArray()` - Validates that the property is an array
 - `@IsDate()` - Validates that the property is a date
 - `@IsEnum(enum)` - Validates that the property is an enum value
+- `@ValidateNested()` - Validates nested objects
+- `@Type()` - For nested object transformation (from class-transformer)
 - And many more! See [class-validator documentation](https://github.com/typestack/class-validator)
+
+**Note**: You don't need to install `class-validator` or `class-transformer` directly. All decorators are re-exported from `@kiqjs/http`.
 
 ## Examples
 
@@ -140,6 +146,8 @@ export class UserController {
 ### Nested DTOs
 
 ```typescript
+import { IsString, IsEmail, MinLength, Length, ValidateNested, Type } from '@kiqjs/http';
+
 export class AddressDto {
   @IsString()
   @MinLength(5)
@@ -170,8 +178,7 @@ export class CreateUserDto {
 ### Array Validation
 
 ```typescript
-import { IsArray, ArrayMinSize, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsArray, ArrayMinSize, ValidateNested, Type, IsString, IsInt, Min } from '@kiqjs/http';
 
 export class CreateOrderDto {
   @IsArray()

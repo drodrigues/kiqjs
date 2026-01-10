@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, MaxLength, IsOptional } from 'class-validator';
+import { IsString, IsEmail, MinLength, MaxLength, IsOptional } from '@kiqjs/http';
 
 /**
  * Data Transfer Objects for User feature
