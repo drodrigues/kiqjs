@@ -14,10 +14,10 @@ pnpm add @kiqjs/http
 
 ### 1. Define your DTO class
 
-All validation decorators are re-exported from `@kiqjs/http`, so you don't need to install `class-validator` directly:
+All validation decorators are available from `@kiqjs/http/dto`, so you don't need to install `class-validator` directly:
 
 ```typescript
-import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http';
+import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http/dto';
 
 export class CreateUserDto {
   @IsString()
@@ -86,7 +86,7 @@ When validation fails, the API automatically returns a structured error response
 
 ## Available Decorators
 
-All decorators are imported from `@kiqjs/http`:
+All validation decorators are imported from `@kiqjs/http/dto`:
 
 - `@IsString()` - Validates that the property is a string
 - `@IsNumber()` - Validates that the property is a number
@@ -105,7 +105,7 @@ All decorators are imported from `@kiqjs/http`:
 - `@Type()` - For nested object transformation (from class-transformer)
 - And many more! See [class-validator documentation](https://github.com/typestack/class-validator)
 
-**Note**: You don't need to install `class-validator` or `class-transformer` directly. All decorators are re-exported from `@kiqjs/http`.
+**Note**: You don't need to install `class-validator` or `class-transformer` directly. All decorators are re-exported from `@kiqjs/http/dto`.
 
 ## Examples
 
@@ -146,7 +146,7 @@ export class UserController {
 ### Nested DTOs
 
 ```typescript
-import { IsString, IsEmail, MinLength, Length, ValidateNested, Type } from '@kiqjs/http';
+import { IsString, IsEmail, MinLength, Length, ValidateNested, Type } from '@kiqjs/http/dto';
 
 export class AddressDto {
   @IsString()
@@ -178,7 +178,7 @@ export class CreateUserDto {
 ### Array Validation
 
 ```typescript
-import { IsArray, ArrayMinSize, ValidateNested, Type, IsString, IsInt, Min } from '@kiqjs/http';
+import { IsArray, ArrayMinSize, ValidateNested, Type, IsString, IsInt, Min } from '@kiqjs/http/dto';
 
 export class CreateOrderDto {
   @IsArray()

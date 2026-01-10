@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http';
+import { IsString, IsEmail, MinLength, IsOptional, MaxLength } from '@kiqjs/http/dto';
 
 /**
  * DTO for creating a new user

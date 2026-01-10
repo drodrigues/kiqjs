@@ -7,6 +7,10 @@
     ".": {
       "require": "./build/index.js",
       "types": "./build/index.d.ts"
+    },
+    "./dto": {
+      "require": "./build/dto.js",
+      "types": "./build/dto.d.ts"
     }
   },
   "peerDependencies": {

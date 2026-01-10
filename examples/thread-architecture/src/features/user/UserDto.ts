@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, MaxLength, IsOptional } from '@kiqjs/http';
+import { IsString, IsEmail, MinLength, MaxLength, IsOptional } from '@kiqjs/http/dto';
 
 /**
  * Data Transfer Objects for User feature

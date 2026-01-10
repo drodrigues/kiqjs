@@ -2,16 +2,8 @@ import 'reflect-metadata';
 import { Container, runApplication, KiqApplication } from '@kiqjs/core';
 import Router from '@koa/router';
 import { registerControllers, HttpError } from '../src/router';
-import {
-  RestController,
-  PostMapping,
-  RequestBody,
-  Valid,
-  IsString,
-  IsEmail,
-  MinLength,
-  IsOptional,
-} from '../src/index';
+import { RestController, PostMapping, RequestBody, Valid } from '../src/index';
+import { IsString, IsEmail, MinLength, IsOptional } from '../src/dto';
 
 // Test DTO
 class CreateUserDto {
