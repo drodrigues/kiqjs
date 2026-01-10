@@ -19,7 +19,7 @@ export interface RouteHandlerMetadata {
 
 export interface ParamMetadata {
   index: number;
-  type: 'body' | 'param' | 'query' | 'header' | 'ctx' | 'req' | 'res';
+  type: 'body' | 'files' | 'param' | 'query' | 'header' | 'ctx' | 'req' | 'res';
   name?: string;
   required?: boolean;
 }

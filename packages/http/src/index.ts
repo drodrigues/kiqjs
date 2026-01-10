@@ -10,6 +10,7 @@ export {
   DeleteMapping,
   PatchMapping,
   RequestBody,
+  RequestPart,
   PathVariable,
   RequestParam,
   RequestHeader,
@@ -19,7 +20,7 @@ export {
 } from './decorators';
 
 // Application
-export { KiqHttpApplication, startKiqHttpApplication } from './application';
+export { KiqHttpApplication, startKiqHttpApplication, logger } from './application';
 export type { KiqHttpApplicationOptions } from './application';
 
 // Router utilities

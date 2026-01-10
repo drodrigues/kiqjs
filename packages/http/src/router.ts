@@ -1,14 +1,17 @@
 import 'reflect-metadata';
-import Koa from 'koa';
+
+import { Container, GlobalRegistry } from '@kiqjs/core';
 import Router from '@koa/router';
-import { Container } from '@kiqjs/core';
-import { GlobalRegistry } from '@kiqjs/core';
+
+import Koa from 'koa';
+import { ScalarOrArrayFiles } from 'koa-body';
+
 import {
+  META_PARAM_METADATA,
   META_REST_CONTROLLER,
   META_ROUTE_HANDLER,
-  META_PARAM_METADATA,
-  RouteHandlerMetadata,
   ParamMetadata,
+  RouteHandlerMetadata,
 } from './metadata-keys';
 
 /**
@@ -81,18 +84,13 @@ function registerController(controllerClass: Function, container: Container, rou
       default:
         console.warn(`Unsupported HTTP method: ${route.method}`);
     }
-
-    console.log(`  ${route.method.padEnd(6)} ${fullPath} -> ${controllerClass.name}.${route.propertyKey}`);
   }
 }
 
 /**
  * Creates a Koa route handler from a controller method.
  */
-function createRouteHandler(
-  controllerInstance: any,
-  route: RouteHandlerMetadata
-): Router.Middleware {
+function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata) {
   return async (ctx: Koa.Context, next: Koa.Next) => {
     const paramMetadata: ParamMetadata[] =
       Reflect.getMetadata(META_PARAM_METADATA, controllerInstance, route.propertyKey) || [];
@@ -133,6 +131,19 @@ function extractParameter(ctx: Koa.Context, param: ParamMetadata): any {
   switch (param.type) {
     case 'body':
       return (ctx.request as any).body;
+
+    case 'files':
+      type TRequest = typeof ctx.request;
+      type TRequestWithFiles = TRequest & { files?: ScalarOrArrayFiles };
+      const request = ctx.request as TRequestWithFiles;
+      if (param.name) {
+        const value = (request.files || {})[param.name];
+        if (param.required && (value === undefined || value === null)) {
+          throw new HttpError(400, `Path variable '${param.name}' is required`);
+        }
+        return value;
+      }
+      return request.files;
 
     case 'param':
       if (param.name) {
@@ -194,10 +205,7 @@ function normalizePath(...segments: string[]): string {
  * HTTP error class for request validation errors.
  */
 export class HttpError extends Error {
-  constructor(
-    public status: number,
-    message: string
-  ) {
+  constructor(public status: number, message: string) {
     super(message);
     this.name = 'HttpError';
   }

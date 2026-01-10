@@ -1,14 +1,16 @@
 import 'reflect-metadata';
+
 import { Controller } from '@kiqjs/core';
+
 import {
-  META_REST_CONTROLLER,
-  META_REQUEST_MAPPING,
-  META_ROUTE_HANDLER,
-  META_PARAM_METADATA,
   HttpMethod,
+  META_PARAM_METADATA,
+  META_REQUEST_MAPPING,
+  META_REST_CONTROLLER,
+  META_ROUTE_HANDLER,
+  ParamMetadata,
   RequestMappingMetadata,
   RouteHandlerMetadata,
-  ParamMetadata,
 } from './metadata-keys';
 
 // ============================================
@@ -178,6 +180,19 @@ function createParamDecorator(type: ParamMetadata['type']) {
  * ```
  */
 export const RequestBody = createParamDecorator('body');
+
+/**
+ * Binds method parameter to request body (Spring-like).
+ *
+ * @example
+ * ```typescript
+ * @PostMapping()
+ * createUser(@RequestPart('file') file: File) {
+ *   return user;
+ * }
+ * ```
+ */
+export const RequestPart = createParamDecorator('files');
 
 /**
  * Binds method parameter to path variable (Spring-like).

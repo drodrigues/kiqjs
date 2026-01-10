@@ -1,9 +1,15 @@
 import 'reflect-metadata';
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import Router from '@koa/router';
+
 import { Container, runApplication } from '@kiqjs/core';
-import { registerControllers, HttpError } from './router';
+import Router from '@koa/router';
+
+import Koa from 'koa';
+import bodyParser, { KoaBodyMiddlewareOptions } from 'koa-body';
+import pino from 'pino';
+
+import { HttpError, registerControllers } from './router';
+
+export const logger = pino();
 
 export interface KiqHttpApplicationOptions {
   /**
@@ -19,7 +25,7 @@ export interface KiqHttpApplicationOptions {
   /**
    * Body parser options
    */
-  bodyParserOptions?: bodyParser.Options;
+  bodyParserOptions?: Partial<KoaBodyMiddlewareOptions>;
 
   /**
    * Enable default error handler (default: true)
@@ -64,10 +70,7 @@ export class KiqHttpApplication {
   private container!: Container;
   private options: Required<KiqHttpApplicationOptions>;
 
-  constructor(
-    private appClass: new () => any,
-    options: KiqHttpApplicationOptions = {}
-  ) {
+  constructor(private appClass: new () => any, options: KiqHttpApplicationOptions = {}) {
     this.app = new Koa();
     this.router = new Router();
 
@@ -76,7 +79,7 @@ export class KiqHttpApplication {
       bodyParser: options.bodyParser ?? true,
       bodyParserOptions: options.bodyParserOptions ?? {},
       errorHandler: options.errorHandler ?? true,
-      logging: options.logging ?? false,
+      logging: options.logging ?? true,
       middlewares: options.middlewares ?? [],
       prefix: options.prefix ?? '',
     };
@@ -101,7 +104,6 @@ export class KiqHttpApplication {
     this.setupMiddlewares();
 
     // Register REST controllers
-    console.log('\n🔍 Registering REST controllers:');
     registerControllers(this.container, this.router);
 
     // Apply router
@@ -111,9 +113,9 @@ export class KiqHttpApplication {
     // Start server
     return new Promise((resolve) => {
       this.app.listen(listenPort, () => {
-        console.log(`\n🚀 Server started successfully!`);
-        console.log(`📡 Listening on http://localhost:${listenPort}${this.options.prefix}`);
-        console.log(`✨ Environment: ${process.env.NODE_ENV || 'development'}\n`);
+        console.log(`\nServer started`);
+        console.log(`Listening on http://localhost:${listenPort}${this.options.prefix}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}\n\n`);
         resolve();
       });
     });
@@ -191,7 +193,7 @@ export class KiqHttpApplication {
 
           // Log server errors
           if (ctx.status >= 500) {
-            console.error('❌ Server Error:', err);
+            logger.error('Server Error:', err);
           }
         }
 
@@ -205,11 +207,18 @@ export class KiqHttpApplication {
       const start = Date.now();
       await next();
       const ms = Date.now() - start;
+      const { query, body } = ctx.request;
 
-      const statusColor = ctx.status >= 500 ? '🔴' : ctx.status >= 400 ? '🟡' : '🟢';
-      console.log(
-        `${statusColor} ${ctx.method.padEnd(6)} ${ctx.url.padEnd(40)} ${ctx.status} - ${ms}ms`
-      );
+      const isError = ctx.status >= 500;
+      const child = logger.child({
+        method: ctx.method.padEnd(6).trim(),
+        path: ctx.url.padEnd(40).trim(),
+        ms: `${ms}ms`,
+        params: Object.keys(query).length ? query : undefined,
+      });
+      const out = isError ? child.error : child.info;
+
+      child.info(body ? { body } : undefined);
     };
   }
 }
