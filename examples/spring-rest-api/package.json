@@ -1,0 +1,26 @@
+{
+  "name": "spring-rest-api-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spring Boot-like REST API example using KiqJS",
+  "main": "src/app.ts",
+  "scripts": {
+    "dev": "ts-node src/app.ts",
+    "start": "node dist/app.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@kiqjs/core": "workspace:*",
+    "@kiqjs/http": "workspace:*",
+    "koa": "^2.15.0",
+    "@koa/router": "^12.0.1",
+    "koa-bodyparser": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.14.0",
+    "@types/koa__router": "^12.0.4",
+    "@types/node": "^24.6.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

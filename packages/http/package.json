@@ -1,6 +1,6 @@
 {
   "name": "@kiqjs/http",
-  "description": "HTTP integration for kiqjs. Provides @RestController and route decorators (@Get, @Post, @Put, @Delete) to map controllers and methods into HTTP endpoints automatically.",
+  "description": "HTTP integration for kiqjs. Provides @RestController and route decorators (@GetMapping, @PostMapping, @PutMapping, @DeleteMapping) to map controllers and methods into HTTP endpoints automatically. Spring Boot-inspired decorators for Node.js/TypeScript.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "exports": {
@@ -10,11 +10,20 @@
     }
   },
   "peerDependencies": {
-    "@kiqjs/core": "workspace:*"
+    "@kiqjs/core": "workspace:*",
+    "koa": "^2.15.0",
+    "@koa/router": "^12.0.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "koa-bodyparser": "^4.4.1",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.14.0",
+    "@types/koa__router": "^12.0.4",
+    "@types/koa-bodyparser": "^4.3.12"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
-  },
-  "devDependencies": {}
+  }
 }

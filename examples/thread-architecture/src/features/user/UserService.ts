@@ -1,0 +1,149 @@
+import { Service } from '@kiqjs/core';
+import { User, UserStatus } from '../../domains/User';
+import { Result, success, failure } from '../../core/Result';
+import { UserRepository } from './UserRepository';
+import { UserEventPublisher } from './UserEventPublisher';
+import { UserCreatedEvent } from './UserCreatedEvent';
+import { UserUpdatedEvent } from './UserUpdatedEvent';
+import { CreateUserDto, UpdateUserDto } from './UserDto';
+
+/**
+ * User Service
+ * Orquestra as operações de negócio relacionadas a usuários
+ * Coordena entre domínio, repositório e eventos
+ */
+@Service()
+export class UserService {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userEventPublisher: UserEventPublisher
+  ) {}
+
+  async createUser(dto: CreateUserDto): Promise<Result<User, string>> {
+    // Business rule: email must be unique
+    const existingUser = await this.userRepository.findByEmail(dto.email);
+    if (existingUser) {
+      return failure(`User with email ${dto.email} already exists`);
+    }
+
+    try {
+      // Create domain entity
+      const user = new User(
+        this.generateId(),
+        dto.name,
+        dto.email,
+        UserStatus.PENDING,
+        new Date()
+      );
+
+      // Persist
+      await this.userRepository.save(user);
+
+      // Publish event
+      await this.userEventPublisher.publishUserCreated(new UserCreatedEvent(user));
+
+      return success(user);
+    } catch (error: any) {
+      return failure(error.message);
+    }
+  }
+
+  async getUserById(id: string): Promise<Result<User, string>> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      return failure(`User with id ${id} not found`);
+    }
+    return success(user);
+  }
+
+  async getAllUsers(): Promise<Result<User[], string>> {
+    const users = await this.userRepository.findAll();
+    return success(users);
+  }
+
+  async updateUser(id: string, dto: UpdateUserDto): Promise<Result<User, string>> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      return failure(`User with id ${id} not found`);
+    }
+
+    try {
+      // Check email uniqueness if changing email
+      if (dto.email && dto.email !== existingUser.email) {
+        const emailTaken = await this.userRepository.findByEmail(dto.email);
+        if (emailTaken) {
+          return failure(`Email ${dto.email} is already in use`);
+        }
+      }
+
+      // Create updated user
+      const updatedUser = new User(
+        existingUser.id,
+        dto.name ?? existingUser.name,
+        dto.email ?? existingUser.email,
+        existingUser.status,
+        existingUser.createdAt
+      );
+
+      // Persist
+      await this.userRepository.save(updatedUser);
+
+      // Publish event
+      await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(updatedUser));
+
+      return success(updatedUser);
+    } catch (error: any) {
+      return failure(error.message);
+    }
+  }
+
+  async activateUser(id: string): Promise<Result<User, string>> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      return failure(`User with id ${id} not found`);
+    }
+
+    try {
+      // Use domain logic
+      const activatedUser = existingUser.activate();
+      await this.userRepository.save(activatedUser);
+      await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(activatedUser));
+
+      return success(activatedUser);
+    } catch (error: any) {
+      return failure(error.message);
+    }
+  }
+
+  async deactivateUser(id: string): Promise<Result<User, string>> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      return failure(`User with id ${id} not found`);
+    }
+
+    try {
+      // Use domain logic
+      const deactivatedUser = existingUser.deactivate();
+      await this.userRepository.save(deactivatedUser);
+      await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(deactivatedUser));
+
+      return success(deactivatedUser);
+    } catch (error: any) {
+      return failure(error.message);
+    }
+  }
+
+  async deleteUser(id: string): Promise<Result<void, string>> {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      return failure(`User with id ${id} not found`);
+    }
+
+    await this.userRepository.delete(id);
+    return success(undefined);
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).substring(2, 11);
+  }
+}
