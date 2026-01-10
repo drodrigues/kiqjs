@@ -146,8 +146,13 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
       const request = ctx.request as TRequestWithFiles;
       if (param.name) {
         const value = (request.files || {})[param.name];
-        if (param.required && (value === undefined || value === null)) {
-          throw new HttpError(400, `Path variable '${param.name}' is required`);
+        if (value === undefined || value === null) {
+          if (param.defaultValue !== undefined) {
+            return param.defaultValue;
+          }
+          if (param.required) {
+            throw new HttpError(400, `File parameter '${param.name}' is required`);
+          }
         }
         return value;
       }
@@ -156,8 +161,13 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
     case 'param':
       if (param.name) {
         const value = ctx.params[param.name];
-        if (param.required && (value === undefined || value === null)) {
-          throw new HttpError(400, `Path variable '${param.name}' is required`);
+        if (value === undefined || value === null) {
+          if (param.defaultValue !== undefined) {
+            return param.defaultValue;
+          }
+          if (param.required) {
+            throw new HttpError(400, `Path variable '${param.name}' is required`);
+          }
         }
         return value;
       }
@@ -166,8 +176,13 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
     case 'query':
       if (param.name) {
         const value = ctx.query[param.name];
-        if (param.required && (value === undefined || value === null)) {
-          throw new HttpError(400, `Query parameter '${param.name}' is required`);
+        if (value === undefined || value === null) {
+          if (param.defaultValue !== undefined) {
+            return param.defaultValue;
+          }
+          if (param.required) {
+            throw new HttpError(400, `Query parameter '${param.name}' is required`);
+          }
         }
         return value;
       }
@@ -176,8 +191,13 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
     case 'header':
       if (param.name) {
         const value = ctx.get(param.name);
-        if (param.required && !value) {
-          throw new HttpError(400, `Header '${param.name}' is required`);
+        if (!value) {
+          if (param.defaultValue !== undefined) {
+            return param.defaultValue;
+          }
+          if (param.required) {
+            throw new HttpError(400, `Header '${param.name}' is required`);
+          }
         }
         return value;
       }

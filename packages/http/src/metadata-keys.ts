@@ -24,5 +24,12 @@ export interface ParamMetadata {
   type: 'body' | 'files' | 'param' | 'query' | 'header' | 'ctx' | 'req' | 'res';
   name?: string;
   required?: boolean;
+  defaultValue?: any;
   dtoClass?: new () => any;
+}
+
+export interface ParamDecoratorOptions {
+  name?: string;
+  required?: boolean;
+  defaultValue?: any;
 }

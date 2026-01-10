@@ -33,6 +33,7 @@ export type {
   RequestMappingMetadata,
   RouteHandlerMetadata,
   ParamMetadata,
+  ParamDecoratorOptions,
 } from './metadata-keys';
 
 // Validation utilities

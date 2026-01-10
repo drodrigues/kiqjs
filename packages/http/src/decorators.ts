@@ -9,6 +9,7 @@ import {
   META_REST_CONTROLLER,
   META_ROUTE_HANDLER,
   ParamMetadata,
+  ParamDecoratorOptions,
   RequestMappingMetadata,
   RouteHandlerMetadata,
 } from './metadata-keys';
@@ -151,16 +152,35 @@ export const PatchMapping = createMethodDecorator('PATCH');
 // ============================================
 
 function createParamDecorator(type: ParamMetadata['type']) {
-  return function (name?: string, required: boolean = true) {
+  return function (nameOrOptions?: string | ParamDecoratorOptions, legacyRequired?: boolean) {
     return function (target: any, propertyKey: string, parameterIndex: number) {
       const existingParams: ParamMetadata[] =
         Reflect.getMetadata(META_PARAM_METADATA, target, propertyKey) || [];
+
+      // Parse options from either new API or legacy API
+      let name: string | undefined;
+      let required: boolean = true;
+      let defaultValue: any = undefined;
+
+      if (typeof nameOrOptions === 'string') {
+        // Legacy API: @RequestParam('name', false)
+        name = nameOrOptions;
+        if (legacyRequired !== undefined) {
+          required = legacyRequired;
+        }
+      } else if (typeof nameOrOptions === 'object' && nameOrOptions !== null) {
+        // New API: @RequestParam({ name: 'name', required: false, defaultValue: '1' })
+        name = nameOrOptions.name;
+        required = nameOrOptions.required !== undefined ? nameOrOptions.required : true;
+        defaultValue = nameOrOptions.defaultValue;
+      }
 
       const param: ParamMetadata = {
         index: parameterIndex,
         type,
         name,
         required,
+        defaultValue,
       };
 
       // Check if @Valid() was used on this parameter
@@ -261,12 +281,20 @@ export const RequestPart = createParamDecorator('files');
 /**
  * Binds method parameter to path variable (Spring-like).
  *
- * @param name Path variable name
+ * @param nameOrOptions Path variable name or options object
  *
  * @example
  * ```typescript
  * @GetMapping('/:id')
  * getUser(@PathVariable('id') id: string) {
+ *   return { id };
+ * }
+ * ```
+ *
+ * @example With defaultValue:
+ * ```typescript
+ * @GetMapping('/:id?')
+ * getUser(@PathVariable({ name: 'id', required: false, defaultValue: '0' }) id: string) {
  *   return { id };
  * }
  * ```
@@ -276,13 +304,23 @@ export const PathVariable = createParamDecorator('param');
 /**
  * Binds method parameter to query parameter (Spring-like).
  *
- * @param name Query parameter name
- * @param required Whether the parameter is required (default: true)
+ * @param nameOrOptions Query parameter name or options object
  *
- * @example
+ * @example Basic usage:
  * ```typescript
  * @GetMapping()
  * searchUsers(@RequestParam('query') query: string) {
+ *   return [];
+ * }
+ * ```
+ *
+ * @example With required and defaultValue (Spring Boot style):
+ * ```typescript
+ * @GetMapping()
+ * searchUsers(
+ *   @RequestParam({ name: 'page', required: false, defaultValue: '1' }) page: string,
+ *   @RequestParam({ name: 'limit', required: false, defaultValue: '10' }) limit: string
+ * ) {
  *   return [];
  * }
  * ```
@@ -292,13 +330,21 @@ export const RequestParam = createParamDecorator('query');
 /**
  * Binds method parameter to request header (Spring-like).
  *
- * @param name Header name
+ * @param nameOrOptions Header name or options object
  *
  * @example
  * ```typescript
  * @GetMapping()
  * getProfile(@RequestHeader('Authorization') token: string) {
  *   return { token };
+ * }
+ * ```
+ *
+ * @example With defaultValue:
+ * ```typescript
+ * @GetMapping()
+ * getProfile(@RequestHeader({ name: 'Content-Type', required: false, defaultValue: 'application/json' }) contentType: string) {
+ *   return { contentType };
  * }
  * ```
  */
