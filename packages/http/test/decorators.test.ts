@@ -5,15 +5,22 @@ import {
   PostMapping,
   PutMapping,
   DeleteMapping,
+  PatchMapping,
   PathVariable,
   RequestBody,
   RequestParam,
   RequestHeader,
+  RequestPart,
+  Context,
+  Request,
+  Response,
+  RequestMapping,
 } from '../src/decorators';
 import {
   META_REST_CONTROLLER,
   META_ROUTE_HANDLER,
   META_PARAM_METADATA,
+  META_REQUEST_MAPPING,
 } from '../src/metadata-keys';
 
 describe('HTTP Decorators', () => {
@@ -90,6 +97,22 @@ describe('HTTP Decorators', () => {
 
       const routes = Reflect.getMetadata(META_ROUTE_HANDLER, UserController);
       expect(routes[0].method).toBe('DELETE');
+    });
+
+    it('@PatchMapping should register PATCH route', () => {
+      @RestController('/users')
+      class UserController {
+        @PatchMapping('/:id')
+        patchUser() {}
+      }
+
+      const routes = Reflect.getMetadata(META_ROUTE_HANDLER, UserController);
+      expect(routes).toHaveLength(1);
+      expect(routes[0]).toMatchObject({
+        path: '/:id',
+        method: 'PATCH',
+        propertyKey: 'patchUser',
+      });
     });
 
     it('should support multiple routes on same controller', () => {
@@ -207,6 +230,151 @@ describe('HTTP Decorators', () => {
       expect(sortedParams.map((p: any) => p.type)).toEqual(['param', 'body', 'header']);
       expect(sortedParams[0].name).toBe('id');
       expect(sortedParams[2].name).toBe('Authorization');
+    });
+
+    it('@RequestPart should register files parameter', () => {
+      @RestController('/upload')
+      class UploadController {
+        @PostMapping()
+        uploadFile(@RequestPart('file') file: any) {}
+      }
+
+      const params = Reflect.getMetadata(
+        META_PARAM_METADATA,
+        UploadController.prototype,
+        'uploadFile'
+      );
+      expect(params).toHaveLength(1);
+      expect(params[0]).toMatchObject({
+        index: 0,
+        type: 'files',
+        name: 'file',
+        required: true,
+      });
+    });
+
+    it('@Context should register ctx parameter', () => {
+      @RestController('/test')
+      class TestController {
+        @GetMapping()
+        handle(@Context() ctx: any) {}
+      }
+
+      const params = Reflect.getMetadata(
+        META_PARAM_METADATA,
+        TestController.prototype,
+        'handle'
+      );
+      expect(params).toHaveLength(1);
+      expect(params[0]).toMatchObject({
+        index: 0,
+        type: 'ctx',
+      });
+    });
+
+    it('@Request should register req parameter', () => {
+      @RestController('/test')
+      class TestController {
+        @GetMapping()
+        handle(@Request() req: any) {}
+      }
+
+      const params = Reflect.getMetadata(
+        META_PARAM_METADATA,
+        TestController.prototype,
+        'handle'
+      );
+      expect(params).toHaveLength(1);
+      expect(params[0]).toMatchObject({
+        index: 0,
+        type: 'req',
+      });
+    });
+
+    it('@Response should register res parameter', () => {
+      @RestController('/test')
+      class TestController {
+        @GetMapping()
+        handle(@Response() res: any) {}
+      }
+
+      const params = Reflect.getMetadata(
+        META_PARAM_METADATA,
+        TestController.prototype,
+        'handle'
+      );
+      expect(params).toHaveLength(1);
+      expect(params[0]).toMatchObject({
+        index: 0,
+        type: 'res',
+      });
+    });
+
+    it('@RequestParam with required=false should mark parameter as optional', () => {
+      @RestController('/users')
+      class UserController {
+        @GetMapping()
+        search(@RequestParam('query', false) query?: string) {}
+      }
+
+      const params = Reflect.getMetadata(
+        META_PARAM_METADATA,
+        UserController.prototype,
+        'search'
+      );
+      expect(params[0]).toMatchObject({
+        type: 'query',
+        name: 'query',
+        required: false,
+      });
+    });
+  });
+
+  describe('@RequestMapping', () => {
+    it('should register method-level request mapping', () => {
+      @RestController('/users')
+      class UserController {
+        @RequestMapping('/test', 'GET')
+        testMethod() {}
+      }
+
+      const metadata = Reflect.getMetadata(
+        META_REQUEST_MAPPING,
+        UserController.prototype,
+        'testMethod'
+      );
+      expect(metadata).toMatchObject({
+        path: '/test',
+        method: 'GET',
+      });
+    });
+
+    it('should register class-level request mapping', () => {
+      @RequestMapping('/api')
+      class ApiController {}
+
+      const metadata = Reflect.getMetadata(META_REQUEST_MAPPING, ApiController);
+      expect(metadata).toMatchObject({
+        path: '/api',
+      });
+    });
+
+    it('should work with multiple HTTP methods', () => {
+      @RestController('/users')
+      class UserController {
+        @RequestMapping('/test', ['GET', 'POST'])
+        testMethod() {}
+      }
+
+      const metadata = Reflect.getMetadata(
+        META_REQUEST_MAPPING,
+        UserController.prototype,
+        'testMethod'
+      );
+      expect(metadata).toMatchObject({
+        path: '/test',
+        method: ['GET', 'POST'],
+      });
     });
   });
 });
