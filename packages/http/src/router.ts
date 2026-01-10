@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import Koa from 'koa';
 import Router from '@koa/router';
 import { Container } from '@kiqjs/core';
+import { GlobalRegistry } from '@kiqjs/core';
 import {
   META_REST_CONTROLLER,
   META_ROUTE_HANDLER,
@@ -17,7 +18,7 @@ import {
  * @param router Koa router instance
  */
 export function registerControllers(container: Container, router: Router): void {
-  const controllers = findRestControllers(container);
+  const controllers = findRestControllers();
 
   for (const controller of controllers) {
     registerController(controller, container, router);
@@ -25,17 +26,13 @@ export function registerControllers(container: Container, router: Router): void 
 }
 
 /**
- * Finds all classes marked with @RestController in the container.
+ * Finds all classes marked with @RestController in the registry.
  */
-function findRestControllers(container: Container): Function[] {
+function findRestControllers(): Function[] {
   const controllers: Function[] = [];
-  const registry = (container as any).registry;
+  const providers = GlobalRegistry.instance.list();
 
-  if (!registry || !registry.providers) {
-    return controllers;
-  }
-
-  for (const provider of registry.providers.values()) {
+  for (const provider of providers) {
     const token = provider.token;
     if (typeof token === 'function') {
       const metadata = Reflect.getMetadata(META_REST_CONTROLLER, token);

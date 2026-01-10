@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 export { Container } from './container';
+export { GlobalRegistry } from './registry';
 export {
   Component,
   Service,

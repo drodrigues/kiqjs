@@ -1,18 +1,19 @@
 import {
-  RestController,
+  DeleteMapping,
   GetMapping,
+  PatchMapping,
+  PathVariable,
   PostMapping,
   PutMapping,
-  PatchMapping,
-  DeleteMapping,
-  PathVariable,
   RequestBody,
   RequestParam,
+  RestController,
 } from '@kiqjs/http';
-import { UserService } from './UserService';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from './UserDto';
-import { User } from '../../domains/User';
 
+import { User } from '../../domains/User';
+import { UserService } from './UserService';
+
+import type { CreateUserDto, UpdateUserDto, UserResponseDto } from './UserDto';
 /**
  * User HTTP Controller
  * Expõe endpoints REST para operações de usuário

@@ -47,9 +47,40 @@ importers:
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
+    devDependencies:
+      '@types/koa':
+        specifier: ^2.14.0
+        version: 2.15.0
+      '@types/koa__router':
+        specifier: ^12.0.4
+        version: 12.0.5
+      '@types/node':
+        specifier: ^24.6.1
+        version: 24.6.1
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@24.6.1)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  examples/thread-architecture:
+    dependencies:
+      '@kiqjs/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@kiqjs/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      '@koa/router':
+        specifier: ^12.0.1
+        version: 12.0.2
+      koa:
+        specifier: ^2.15.0
+        version: 2.16.3
+      koa-bodyparser:
+        specifier: ^4.4.1
+        version: 4.4.1
     devDependencies:
       '@types/koa':
         specifier: ^2.14.0
