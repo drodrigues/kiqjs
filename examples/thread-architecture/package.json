@@ -5,7 +5,7 @@
   "description": "THREAD Architecture example using KiqJS - Domain-driven, feature-oriented REST API",
   "main": "src/Application.ts",
   "scripts": {
-    "dev": "ts-node src/Application.ts",
+    "dev": "nodemon --watch 'src/' --exec 'ts-node src/Application.ts' -e ts",
     "start": "node dist/Application.js",
     "build": "tsc"
   },
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.6.1",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

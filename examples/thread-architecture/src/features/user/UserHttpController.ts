@@ -10,6 +10,7 @@ import {
   RestController,
 } from '@kiqjs/http';
 
+import { toResponse } from '../../core/Result';
 import { User } from '../../domains/User';
 import { UserService } from './UserService';
 
@@ -42,11 +43,7 @@ export class UserHttpController {
       users = users.filter((u) => u.status === status);
     }
 
-    return {
-      success: true,
-      data: users.map(this.toResponseDto),
-      count: users.length,
-    };
+    return toResponse(users);
   }
 
   /**
@@ -73,6 +70,7 @@ export class UserHttpController {
    */
   @PostMapping()
   async createUser(@RequestBody() dto: CreateUserDto) {
+    console.log(dto);
     const result = await this.userService.createUser(dto);
 
     if (!result.success) {

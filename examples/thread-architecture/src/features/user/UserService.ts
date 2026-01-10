@@ -1,11 +1,12 @@
 import { Service } from '@kiqjs/core';
+
+import { failure, Result, success } from '../../core/Result';
 import { User, UserStatus } from '../../domains/User';
-import { Result, success, failure } from '../../core/Result';
-import { UserRepository } from './UserRepository';
-import { UserEventPublisher } from './UserEventPublisher';
 import { UserCreatedEvent } from './UserCreatedEvent';
-import { UserUpdatedEvent } from './UserUpdatedEvent';
 import { CreateUserDto, UpdateUserDto } from './UserDto';
+import { UserEventPublisher } from './UserEventPublisher';
+import { UserRepository } from './UserRepository';
+import { UserUpdatedEvent } from './UserUpdatedEvent';
 
 /**
  * User Service
@@ -28,13 +29,7 @@ export class UserService {
 
     try {
       // Create domain entity
-      const user = new User(
-        this.generateId(),
-        dto.name,
-        dto.email,
-        UserStatus.PENDING,
-        new Date()
-      );
+      const user = new User(this.generateId(), dto.name, dto.email, UserStatus.PENDING, new Date());
 
       // Persist
       await this.userRepository.save(user);

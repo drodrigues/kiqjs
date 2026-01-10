@@ -1,8 +1,7 @@
-import { Configuration, Bean } from '@kiqjs/core';
+import { Bean, Configuration } from '@kiqjs/core';
 
 /**
  * Application Configuration
- * Configurações explícitas de infraestrutura
  */
 @Configuration()
 export class AppConfig {

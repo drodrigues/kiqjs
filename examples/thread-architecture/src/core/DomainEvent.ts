@@ -1,6 +1,5 @@
 /**
  * Domain Event Base
- * Representa um fato que aconteceu no domínio
  */
 export interface DomainEvent {
   eventType: string;

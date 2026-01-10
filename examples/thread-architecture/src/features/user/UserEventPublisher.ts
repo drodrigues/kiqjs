@@ -1,4 +1,6 @@
 import { Service } from '@kiqjs/core';
+import { logger } from '@kiqjs/http';
+
 import { UserCreatedEvent } from './UserCreatedEvent';
 import { UserUpdatedEvent } from './UserUpdatedEvent';
 
@@ -10,18 +12,21 @@ import { UserUpdatedEvent } from './UserUpdatedEvent';
 @Service()
 export class UserEventPublisher {
   async publishUserCreated(event: UserCreatedEvent): Promise<void> {
-    console.log(`📤 Publishing event: ${event.eventType}`, {
-      aggregateId: event.aggregateId,
-      occurredAt: event.occurredAt,
-      payload: event.payload,
-    });
+    logger.info(
+      {
+        aggregateId: event.aggregateId,
+        occurredAt: event.occurredAt,
+        payload: event.payload,
+      },
+      `Publishing event: ${event.eventType}`
+    );
 
     // TODO: Integrate with Kafka
     // await this.kafkaProducer.send('user.created', event);
   }
 
   async publishUserUpdated(event: UserUpdatedEvent): Promise<void> {
-    console.log(`📤 Publishing event: ${event.eventType}`, {
+    console.log(`Publishing event: ${event.eventType}`, {
       aggregateId: event.aggregateId,
       occurredAt: event.occurredAt,
       payload: event.payload,
