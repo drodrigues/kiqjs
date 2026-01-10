@@ -7,12 +7,12 @@ export type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };
 
-export const success = <T>(data: T): Result<T> => ({
+export const success = <T, E = never>(data: T): Result<T, E> => ({
   success: true,
   data,
 });
 
-export const failure = <E = Error>(error: E): Result<never, E> => ({
+export const failure = <T = never, E = Error>(error: E): Result<T, E> => ({
   success: false,
   error,
 });

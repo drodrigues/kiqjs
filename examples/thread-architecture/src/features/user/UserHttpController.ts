@@ -19,7 +19,7 @@ import type { CreateUserDto, UpdateUserDto, UserResponseDto } from './UserDto';
  * Expõe endpoints REST para operações de usuário
  * Camada de entrada da feature
  */
-@RestController('/api/users')
+@RestController('/users')
 export class UserHttpController {
   constructor(private readonly userService: UserService) {}
 

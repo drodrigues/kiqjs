@@ -1,6 +1,10 @@
 import { KiqApplication } from '@kiqjs/core';
 import { KiqHttpApplication } from '@kiqjs/http';
 
+// Import controllers to register them
+import './features/user/UserHttpController';
+import './config/AppConfig';
+
 /**
  * Application Entry Point
  * Bootstrap da aplicação seguindo THREAD Architecture
