@@ -19,10 +19,12 @@
 ## Installation
 
 ```bash
-npm install @kiqjs/http @kiqjs/core koa @koa/router
+npm install @kiqjs/http @kiqjs/core
 # or
-pnpm add @kiqjs/http @kiqjs/core koa @koa/router
+pnpm add @kiqjs/http @kiqjs/core
 ```
+
+> **Note:** All necessary HTTP server dependencies (Koa, Router, Body Parser) are included automatically. You don't need to install them separately.
 
 ## Quick Start
 
