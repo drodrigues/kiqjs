@@ -10,10 +10,10 @@ import {
   RestController,
 } from '@kiqjs/http';
 
-import { User } from '../../domains/User';
-import { UserService } from './UserService';
+import { User } from '@/domains/User';
+import { UserService } from '@/features/user/UserService';
 
-import type { CreateUserDto, UpdateUserDto, UserResponseDto } from './UserDto';
+import type { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/features/user/UserDto';
 /**
  * User HTTP Controller
  * Expõe endpoints REST para operações de usuário

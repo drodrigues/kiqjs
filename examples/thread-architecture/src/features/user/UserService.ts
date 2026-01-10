@@ -1,11 +1,11 @@
 import { Service } from '@kiqjs/core';
-import { User, UserStatus } from '../../domains/User';
-import { Result, success, failure } from '../../core/Result';
-import { UserRepository } from './UserRepository';
-import { UserEventPublisher } from './UserEventPublisher';
-import { UserCreatedEvent } from './UserCreatedEvent';
-import { UserUpdatedEvent } from './UserUpdatedEvent';
-import { CreateUserDto, UpdateUserDto } from './UserDto';
+import { User, UserStatus } from '@/domains/User';
+import { Result, success, failure } from '@/core/Result';
+import { UserRepository } from '@/features/user/UserRepository';
+import { UserEventPublisher } from '@/features/user/UserEventPublisher';
+import { UserCreatedEvent } from '@/features/user/UserCreatedEvent';
+import { UserUpdatedEvent } from '@/features/user/UserUpdatedEvent';
+import { CreateUserDto, UpdateUserDto } from '@/features/user/UserDto';
 
 /**
  * User Service
