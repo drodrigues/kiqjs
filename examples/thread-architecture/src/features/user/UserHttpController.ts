@@ -8,6 +8,7 @@ import {
   RequestBody,
   RequestParam,
   RestController,
+  Valid,
 } from '@kiqjs/http';
 
 import { toResponse } from '../../core/Result';
@@ -66,11 +67,11 @@ export class UserHttpController {
 
   /**
    * POST /api/users
-   * Cria um novo usuário
+   * Cria um novo usuário com validação automática
    */
   @PostMapping()
-  async createUser(@RequestBody() dto: CreateUserDto) {
-    console.log(dto);
+  async createUser(@RequestBody() @Valid() dto: CreateUserDto) {
+    // dto já vem validado automaticamente pelo @Valid()
     const result = await this.userService.createUser(dto);
 
     if (!result.success) {
@@ -86,10 +87,11 @@ export class UserHttpController {
 
   /**
    * PUT /api/users/:id
-   * Atualiza um usuário
+   * Atualiza um usuário com validação automática
    */
   @PutMapping('/:id')
-  async updateUser(@PathVariable('id') id: string, @RequestBody() dto: UpdateUserDto) {
+  async updateUser(@PathVariable('id') id: string, @RequestBody() @Valid() dto: UpdateUserDto) {
+    // dto já vem validado automaticamente pelo @Valid()
     const result = await this.userService.updateUser(id, dto);
 
     if (!result.success) {
