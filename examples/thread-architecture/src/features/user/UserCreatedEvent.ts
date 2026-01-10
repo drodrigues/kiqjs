@@ -1,5 +1,5 @@
-import { BaseDomainEvent } from '@/core/DomainEvent';
-import { User } from '@/domains/User';
+import { BaseDomainEvent } from '../../core/DomainEvent';
+import { User } from '../../domains/User';
 
 /**
  * User Created Domain Event

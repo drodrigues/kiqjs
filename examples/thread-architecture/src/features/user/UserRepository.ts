@@ -1,5 +1,5 @@
 import { Service } from '@kiqjs/core';
-import { User, UserStatus } from '@/domains/User';
+import { User, UserStatus } from '../../domains/User';
 
 /**
  * User Repository

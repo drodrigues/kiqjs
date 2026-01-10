@@ -136,32 +136,6 @@ Todos os arquivos seguem **PascalCase** com sufixo indicando a responsabilidade:
 - `UserEventPublisher.ts` - Publicador de eventos
 - `UserDto.ts` - Data transfer objects
 
-## TypeScript Path Alias
-
-Este projeto usa o alias `@/` para imports absolutos ao invés de caminhos relativos:
-
-```typescript
-// ❌ Antes - Caminhos relativos confusos
-import { User } from '../../domains/User';
-import { UserService } from './UserService';
-
-// ✅ Agora - Imports absolutos claros
-import { User } from '@/domains/User';
-import { UserService } from '@/features/user/UserService';
-```
-
-Configurado em `tsconfig.json`:
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  }
-}
-```
-
 ## Como Executar
 
 ```bash
