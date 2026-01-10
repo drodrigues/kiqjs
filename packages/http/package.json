@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@koa/router": "^15.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
     "koa": "^2.16.3",
     "koa-body": "^7.0.1",
     "pino": "^10.1.1",
