@@ -156,12 +156,22 @@ function createParamDecorator(type: ParamMetadata['type']) {
       const existingParams: ParamMetadata[] =
         Reflect.getMetadata(META_PARAM_METADATA, target, propertyKey) || [];
 
-      existingParams.push({
+      const param: ParamMetadata = {
         index: parameterIndex,
         type,
         name,
         required,
-      });
+      };
+
+      // Check if @Valid() was used on this parameter
+      // @Valid() runs before this decorator (right-to-left execution)
+      const key = Symbol.for(`kiq:http:dto-class:${propertyKey}:${parameterIndex}`);
+      const dtoClass = Reflect.getMetadata(key, target);
+      if (dtoClass) {
+        param.dtoClass = dtoClass;
+      }
+
+      existingParams.push(param);
 
       Reflect.defineMetadata(META_PARAM_METADATA, existingParams, target, propertyKey);
     };
@@ -171,10 +181,28 @@ function createParamDecorator(type: ParamMetadata['type']) {
 /**
  * Binds method parameter to request body (Spring-like).
  *
- * @example
+ * @example Without validation:
  * ```typescript
  * @PostMapping()
- * createUser(@RequestBody() user: CreateUserDto) {
+ * createUser(@RequestBody() user: any) {
+ *   return user;
+ * }
+ * ```
+ *
+ * @example With validation (use with @Valid()):
+ * ```typescript
+ * class CreateUserDto {
+ *   @IsString()
+ *   @MinLength(3)
+ *   name: string;
+ *
+ *   @IsEmail()
+ *   email: string;
+ * }
+ *
+ * @PostMapping()
+ * createUser(@RequestBody() @Valid() user: CreateUserDto) {
+ *   // user is automatically validated and transformed
  *   return user;
  * }
  * ```
@@ -182,13 +210,49 @@ function createParamDecorator(type: ParamMetadata['type']) {
 export const RequestBody = createParamDecorator('body');
 
 /**
- * Binds method parameter to request body (Spring-like).
+ * Marks a parameter for automatic validation using class-validator (Spring-like).
+ * Must be used together with @RequestBody() decorator.
+ *
+ * @example
+ * ```typescript
+ * class CreateUserDto {
+ *   @IsString()
+ *   @MinLength(3)
+ *   name: string;
+ *
+ *   @IsEmail()
+ *   email: string;
+ * }
+ *
+ * @PostMapping()
+ * createUser(@RequestBody() @Valid() user: CreateUserDto) {
+ *   // user is validated and transformed to CreateUserDto instance
+ *   return user;
+ * }
+ * ```
+ */
+export function Valid() {
+  return function (target: any, propertyKey: string, parameterIndex: number) {
+    // Get the parameter type from TypeScript metadata
+    const paramTypes: any[] = Reflect.getMetadata('design:paramtypes', target, propertyKey) || [];
+    const dtoClass = paramTypes[parameterIndex];
+
+    // Store the DTO class for this specific parameter using a unique key
+    // Since decorators execute right-to-left, @Valid() runs before @RequestBody()
+    // We store the class here, and @RequestBody() will retrieve it
+    const key = Symbol.for(`kiq:http:dto-class:${propertyKey}:${parameterIndex}`);
+    Reflect.defineMetadata(key, dtoClass, target);
+  };
+}
+
+/**
+ * Binds method parameter to multipart file upload (Spring-like).
  *
  * @example
  * ```typescript
  * @PostMapping()
- * createUser(@RequestPart('file') file: File) {
- *   return user;
+ * uploadFile(@RequestPart('file') file: File) {
+ *   return { uploaded: true };
  * }
  * ```
  */
