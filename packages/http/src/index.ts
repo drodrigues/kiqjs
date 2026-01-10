@@ -10,6 +10,7 @@ export {
   DeleteMapping,
   PatchMapping,
   RequestBody,
+  Valid,
   RequestPart,
   PathVariable,
   RequestParam,
@@ -33,3 +34,12 @@ export type {
   RouteHandlerMetadata,
   ParamMetadata,
 } from './metadata-keys';
+
+// Validation utilities
+export {
+  transformAndValidate,
+  validateDto,
+  formatValidationErrors,
+  DEFAULT_VALIDATOR_OPTIONS,
+} from './validation';
+export type { DtoValidationOptions } from './validation';
