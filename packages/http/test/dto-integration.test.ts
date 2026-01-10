@@ -103,11 +103,10 @@ describe('DTO Integration', () => {
         await route!.stack[0](ctx, async () => {});
       } catch (error: any) {
         expect(error).toBeInstanceOf(HttpError);
-        expect(error.status).toBe(400);
-        expect(error.message).toBe('Validation failed');
-        expect(error.details).toBeDefined();
-        expect(error.details.name).toBeDefined();
-        expect(error.details.email).toBeDefined();
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        expect(Array.isArray(error.messages)).toBe(true);
+        expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 
@@ -148,7 +147,10 @@ describe('DTO Integration', () => {
       try {
         await route!.stack[0](ctx, async () => {});
       } catch (error: any) {
-        expect(error.details.email).toBeDefined();
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 

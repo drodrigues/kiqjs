@@ -27,6 +27,10 @@ export type { KiqHttpApplicationOptions } from './application';
 // Router utilities
 export { registerControllers, HttpError } from './router';
 
+// Exceptions
+export { KiqError } from './exceptions';
+export * from './exceptions';
+
 // Metadata types
 export type {
   HttpMethod,

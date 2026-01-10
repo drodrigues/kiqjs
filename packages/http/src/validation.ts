@@ -21,7 +21,7 @@ export const DEFAULT_VALIDATOR_OPTIONS: ValidatorOptions = {
  *
  * @param dtoInstance The DTO instance to validate
  * @param options Validator options
- * @throws HttpError with status 400 if validation fails
+ * @throws HttpError with code 400 if validation fails
  */
 export async function validateDto(
   dtoInstance: object,
@@ -30,8 +30,8 @@ export async function validateDto(
   const errors = await validate(dtoInstance, options);
 
   if (errors.length > 0) {
-    const formattedErrors = formatValidationErrors(errors);
-    throw new HttpError(400, 'Validation failed', formattedErrors);
+    const messages = formatValidationErrors(errors);
+    throw new HttpError(400, messages);
   }
 }
 
@@ -42,7 +42,7 @@ export async function validateDto(
  * @param plain Plain object to transform and validate
  * @param options Validator options
  * @returns Validated DTO instance
- * @throws HttpError with status 400 if validation fails
+ * @throws HttpError with code 400 if validation fails
  */
 export async function transformAndValidate<T extends object>(
   dtoClass: new () => T,
@@ -50,7 +50,7 @@ export async function transformAndValidate<T extends object>(
   options: ValidatorOptions = DEFAULT_VALIDATOR_OPTIONS
 ): Promise<T> {
   if (!plain || typeof plain !== 'object') {
-    throw new HttpError(400, 'Request body must be an object');
+    throw new HttpError(400, ['Request body must be an object']);
   }
 
   // Transform plain object to class instance
@@ -63,29 +63,27 @@ export async function transformAndValidate<T extends object>(
 }
 
 /**
- * Formats validation errors into a structured format
+ * Formats validation errors into an array of messages
  *
  * @param errors Array of validation errors
- * @returns Formatted error object
+ * @returns Array of error messages
  */
-export function formatValidationErrors(errors: ValidationError[]): Record<string, string[]> {
-  const formatted: Record<string, string[]> = {};
+export function formatValidationErrors(errors: ValidationError[]): string[] {
+  const messages: string[] = [];
 
   for (const error of errors) {
     if (error.constraints) {
-      formatted[error.property] = Object.values(error.constraints);
+      messages.push(...Object.values(error.constraints));
     }
 
     // Handle nested validation errors
     if (error.children && error.children.length > 0) {
-      const nestedErrors = formatValidationErrors(error.children);
-      for (const [key, value] of Object.entries(nestedErrors)) {
-        formatted[`${error.property}.${key}`] = value;
-      }
+      const nestedMessages = formatValidationErrors(error.children);
+      messages.push(...nestedMessages);
     }
   }
 
-  return formatted;
+  return messages;
 }
 
 /**

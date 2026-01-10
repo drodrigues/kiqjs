@@ -53,17 +53,15 @@ describe('Validation', () => {
       };
 
       await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(HttpError);
-      await expect(transformAndValidate(TestDto, plain)).rejects.toMatchObject({
-        status: 400,
-        message: 'Validation failed',
-      });
 
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error.details).toBeDefined();
-        expect(error.details.name).toBeDefined();
-        expect(error.details.name.length).toBeGreaterThan(0);
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        expect(Array.isArray(error.messages)).toBe(true);
+        expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 
@@ -78,8 +76,10 @@ describe('Validation', () => {
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error.details).toBeDefined();
-        expect(error.details.email).toBeDefined();
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 
@@ -94,9 +94,11 @@ describe('Validation', () => {
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error.details).toBeDefined();
-        expect(error.details.name).toBeDefined();
-        expect(error.details.email).toBeDefined();
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        // Should have errors for both name and email
+        expect(error.messages.length).toBeGreaterThan(1);
       }
     });
 
@@ -110,10 +112,14 @@ describe('Validation', () => {
 
     it('should throw HttpError for null input', async () => {
       await expect(transformAndValidate(TestDto, null)).rejects.toThrow(HttpError);
-      await expect(transformAndValidate(TestDto, null)).rejects.toMatchObject({
-        status: 400,
-        message: 'Request body must be an object',
-      });
+
+      try {
+        await transformAndValidate(TestDto, null);
+      } catch (error: any) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toEqual(['Request body must be an object']);
+      }
     });
 
     it('should throw HttpError for undefined input', async () => {
@@ -147,10 +153,11 @@ describe('Validation', () => {
         await transformAndValidate(TestDto, plain);
         fail('Should have thrown HttpError');
       } catch (error: any) {
-        expect(error.details).toBeDefined();
-        expect(typeof error.details).toBe('object');
-        expect(error.details.name).toBeInstanceOf(Array);
-        expect(error.details.email).toBeInstanceOf(Array);
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error.httpStatus).toBe(400);
+        expect(error.messages).toBeDefined();
+        expect(Array.isArray(error.messages)).toBe(true);
+        expect(error.messages.length).toBeGreaterThan(0);
       }
     });
   });

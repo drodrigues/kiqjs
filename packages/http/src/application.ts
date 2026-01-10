@@ -8,6 +8,7 @@ import bodyParser, { KoaBodyMiddlewareOptions } from 'koa-body';
 import pino from 'pino';
 
 import { HttpError, registerControllers } from './router';
+import { KiqError } from './exceptions';
 
 export const logger = pino();
 
@@ -176,20 +177,19 @@ export class KiqHttpApplication {
       try {
         await next();
       } catch (err: any) {
-        if (err instanceof HttpError) {
-          ctx.status = err.status;
+        if (err instanceof KiqError) {
+          // Use message pattern from dto.ts
+          ctx.status = err.httpStatus;
           ctx.body = {
-            success: false,
-            error: err.message,
-            status: err.status,
-            ...(err.details && { details: err.details }),
+            code: err.httpStatus,
+            messages: Array.isArray(err.messages) ? err.messages : [err.messages],
           };
         } else {
+          // Generic error handling
           ctx.status = err.status || 500;
           ctx.body = {
-            success: false,
-            error: err.message || 'Internal Server Error',
-            status: ctx.status,
+            code: ctx.status,
+            messages: [err.message || 'Internal Server Error'],
           };
 
           // Log server errors

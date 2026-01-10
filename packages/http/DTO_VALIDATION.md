@@ -70,17 +70,15 @@ When you use the `@RequestBody()` with `@Valid()` decorators (Spring Boot style)
 
 ## Validation Error Response
 
-When validation fails, the API automatically returns a structured error response:
+When validation fails, the API automatically returns a structured error response using the `message` pattern:
 
 ```json
 {
-  "success": false,
-  "error": "Validation failed",
-  "status": 400,
-  "details": {
-    "name": ["name must be at least 3 characters long"],
-    "email": ["email must be a valid email address"]
-  }
+  "code": 400,
+  "messages": [
+    "name must be at least 3 characters long",
+    "email must be a valid email address"
+  ]
 }
 ```
 

@@ -30,7 +30,7 @@ export class UserHttpController {
    * Lista todos os usuários
    */
   @GetMapping()
-  async getAllUsers(@RequestParam('status', false) status?: string) {
+  async getAllUsers(@RequestParam({ name: 'status', required: false }) status?: string) {
     const result = await this.userService.getAllUsers();
 
     if (!result.success) {

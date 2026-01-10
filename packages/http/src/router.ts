@@ -14,6 +14,7 @@ import {
   RouteHandlerMetadata,
 } from './metadata-keys';
 import { transformAndValidate } from './validation';
+import { KiqError } from './exceptions';
 
 /**
  * Registers all REST controllers with the Koa router.
@@ -151,7 +152,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, `File parameter '${param.name}' is required`);
+            throw new HttpError(400, [`File parameter '${param.name}' is required`]);
           }
         }
         return value;
@@ -166,7 +167,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, `Path variable '${param.name}' is required`);
+            throw new HttpError(400, [`Path variable '${param.name}' is required`]);
           }
         }
         return value;
@@ -181,7 +182,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, `Query parameter '${param.name}' is required`);
+            throw new HttpError(400, [`Query parameter '${param.name}' is required`]);
           }
         }
         return value;
@@ -196,7 +197,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, `Header '${param.name}' is required`);
+            throw new HttpError(400, [`Header '${param.name}' is required`]);
           }
         }
         return value;
@@ -231,14 +232,12 @@ function normalizePath(...segments: string[]): string {
 
 /**
  * HTTP error class for request validation errors.
+ * Uses the message pattern from dto.ts
+ * @deprecated Use KiqError instead
  */
-export class HttpError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public details?: any
-  ) {
-    super(message);
+export class HttpError extends KiqError {
+  constructor(code: number, messages: string[]) {
+    super(messages, code);
     this.name = 'HttpError';
   }
 }

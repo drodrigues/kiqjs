@@ -1,66 +1,5 @@
 // Re-export class-validator decorators so users don't need to install it directly
-export {
-  // Type validators
-  IsString,
-  IsNumber,
-  IsBoolean,
-  IsInt,
-  IsArray,
-  IsDate,
-  IsObject,
-
-  // String validators
-  IsEmail,
-  IsUrl,
-  IsUUID,
-  IsJSON,
-  IsAlphanumeric,
-  IsAlpha,
-  IsHexColor,
-  IsIP,
-  IsPort,
-  IsMobilePhone,
-  IsPostalCode,
-  IsCreditCard,
-  IsCurrency,
-  IsISO8601,
-  IsLatLong,
-
-  // Number validators
-  Min,
-  Max,
-  IsPositive,
-  IsNegative,
-
-  // String length validators
-  MinLength,
-  MaxLength,
-  Length,
-
-  // Array validators
-  ArrayMinSize,
-  ArrayMaxSize,
-  ArrayContains,
-  ArrayNotContains,
-  ArrayNotEmpty,
-  ArrayUnique,
-
-  // Common validators
-  IsOptional,
-  IsNotEmpty,
-  IsEmpty,
-  Matches,
-  IsEnum,
-  ValidateNested,
-
-  // Conditional validators
-  ValidateIf,
-
-  // Custom validators
-  Validate,
-  ValidatorConstraint,
-  registerDecorator,
-} from 'class-validator';
+export * from 'class-validator';
 
 // Re-export types
 export type {
@@ -70,7 +9,66 @@ export type {
 } from 'class-validator';
 
 // Re-export class-transformer decorators
-export { Type, Exclude, Expose, Transform } from 'class-transformer';
+export * from 'class-transformer';
 
 // Re-export class-transformer types
 export type { TransformationType } from 'class-transformer';
+
+/**
+ * Result Type Pattern
+ */
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
+
+export type CollectionResponseSerializer<T, M extends Record<string, any> = {}> = {
+  data?: T[];
+  meta: MetaSerializer<M>;
+};
+
+export type MetaSerializer<M extends Record<string, any> = {}> = {
+  pagination: MetaPaginationSerializer;
+} & M;
+
+export type MetaPaginationSerializer = {
+  currentPage?: number | null;
+  limit: number;
+  pages: number;
+  total: number;
+};
+
+export const success = <T, E = never>(data: T): Result<T, E> => ({
+  success: true,
+  data,
+});
+
+export const failure = <T = never, E = Error>(error: E): Result<T, E> => ({
+  success: false,
+  error,
+});
+
+export const message = (code: number, messages: string[]) => ({
+  code: 200,
+  messages,
+});
+
+export function toResponse<T, M extends Record<string, any> = {}>(
+  list: T[],
+  meta?: { pagination?: Partial<MetaPaginationSerializer> } & M
+): CollectionResponseSerializer<T, M> {
+  const defaultPagination: MetaPaginationSerializer = {
+    limit: list.length,
+    currentPage: 1,
+    total: list.length,
+    pages: 1,
+  };
+
+  return {
+    data: list,
+    meta: {
+      ...(meta ?? ({} as { pagination?: Partial<MetaPaginationSerializer> } & M)),
+      pagination: {
+        ...defaultPagination,
+        ...(meta?.pagination ?? {}),
+      },
+    },
+  };
+}
