@@ -182,6 +182,7 @@ export class KiqHttpApplication {
             success: false,
             error: err.message,
             status: err.status,
+            ...(err.details && { details: err.details }),
           };
         } else {
           ctx.status = err.status || 500;

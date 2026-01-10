@@ -13,6 +13,7 @@ import {
   ParamMetadata,
   RouteHandlerMetadata,
 } from './metadata-keys';
+import { transformAndValidate } from './validation';
 
 /**
  * Registers all REST controllers with the Koa router.
@@ -101,7 +102,7 @@ function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata
     // Extract parameters
     const args: any[] = [];
     for (const param of paramMetadata) {
-      args[param.index] = extractParameter(ctx, param);
+      args[param.index] = await extractParameter(ctx, param);
     }
 
     try {
@@ -127,10 +128,17 @@ function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata
 /**
  * Extracts a parameter value from the Koa context based on metadata.
  */
-function extractParameter(ctx: Koa.Context, param: ParamMetadata): any {
+async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise<any> {
   switch (param.type) {
     case 'body':
-      return (ctx.request as any).body;
+      const body = (ctx.request as any).body;
+
+      // If a DTO class is specified, validate and transform
+      if (param.dtoClass) {
+        return await transformAndValidate(param.dtoClass, body);
+      }
+
+      return body;
 
     case 'files':
       type TRequest = typeof ctx.request;
@@ -205,7 +213,11 @@ function normalizePath(...segments: string[]): string {
  * HTTP error class for request validation errors.
  */
 export class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'HttpError';
   }
