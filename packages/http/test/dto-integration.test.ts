@@ -1,18 +1,20 @@
 import 'reflect-metadata';
-import { Container, runApplication, KiqApplication } from '@kiqjs/core';
+
+import { KiqApplication, runApplication } from '@kiqjs/core';
 import Router from '@koa/router';
-import { registerControllers, HttpError } from '../src/router';
-import { RestController, PostMapping, RequestBody, Valid } from '../src/index';
-import { IsString, IsEmail, MinLength, IsOptional } from '../src/dto';
+
+import { IsEmail, IsOptional, IsString, MinLength } from '../src/dto';
+import { KiqError, PostMapping, RequestBody, RestController, Valid } from '../src/index';
+import { registerControllers } from '../src/router';
 
 // Test DTO
 class CreateUserDto {
   @IsString()
   @MinLength(3)
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()
@@ -97,13 +99,13 @@ describe('DTO Integration', () => {
 
       const route = router.stack.find((r) => r.path === '/users-invalid');
 
-      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(HttpError);
+      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(KiqError);
 
       try {
         await route!.stack[0](ctx, async () => {});
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error).toBeInstanceOf(KiqError);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         expect(Array.isArray(error.messages)).toBe(true);
         expect(error.messages.length).toBeGreaterThan(0);
@@ -142,13 +144,13 @@ describe('DTO Integration', () => {
 
       const route = router.stack.find((r) => r.path === '/users-missing');
 
-      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(HttpError);
+      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(KiqError);
 
       try {
         await route!.stack[0](ctx, async () => {});
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error).toBeInstanceOf(KiqError);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         expect(error.messages.length).toBeGreaterThan(0);
       }
