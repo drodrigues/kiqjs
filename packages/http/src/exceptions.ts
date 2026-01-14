@@ -1,9 +1,9 @@
 export class KiqError extends Error {
-  constructor(public messages: string | string[], public httpStatus: number) {
+  constructor(public messages: string | string[], public status: number) {
     const arrayMessages = typeof messages == 'string' ? [messages] : messages;
     super(arrayMessages.join(', '));
     this.messages = arrayMessages;
-    this.httpStatus = httpStatus;
+    this.status = status;
   }
 }
 

@@ -6,6 +6,7 @@ import Router from '@koa/router';
 import Koa from 'koa';
 import { ScalarOrArrayFiles } from 'koa-body';
 
+import { BadRequest } from './exceptions';
 import {
   META_PARAM_METADATA,
   META_REST_CONTROLLER,
@@ -14,7 +15,6 @@ import {
   RouteHandlerMetadata,
 } from './metadata-keys';
 import { transformAndValidate } from './validation';
-import { KiqError } from './exceptions';
 
 /**
  * Registers all REST controllers with the Koa router.
@@ -110,8 +110,10 @@ function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata
       // Call controller method
       const result = await controllerInstance[route.propertyKey](...args);
 
-      // Handle response
+      if (result.status) ctx.status = result.status;
+
       if (result !== undefined && result !== null) {
+        // Handle response
         // If method returns a value and hasn't set ctx.body, set it
         if (ctx.body === undefined) {
           ctx.body = result;
@@ -152,7 +154,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, [`File parameter '${param.name}' is required`]);
+            throw BadRequest(`File parameter '${param.name}' is required`);
           }
         }
         return value;
@@ -167,7 +169,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, [`Path variable '${param.name}' is required`]);
+            throw BadRequest(`Path variable '${param.name}' is required`);
           }
         }
         return value;
@@ -182,7 +184,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, [`Query parameter '${param.name}' is required`]);
+            throw BadRequest(`Query parameter '${param.name}' is required`);
           }
         }
         return value;
@@ -197,7 +199,7 @@ async function extractParameter(ctx: Koa.Context, param: ParamMetadata): Promise
             return param.defaultValue;
           }
           if (param.required) {
-            throw new HttpError(400, [`Header '${param.name}' is required`]);
+            throw BadRequest(`Header '${param.name}' is required`);
           }
         }
         return value;
@@ -228,16 +230,4 @@ function normalizePath(...segments: string[]): string {
     .replace(/\/+/g, '/');
 
   return combined.startsWith('/') ? combined : '/' + combined;
-}
-
-/**
- * HTTP error class for request validation errors.
- * Uses the message pattern from dto.ts
- * @deprecated Use KiqError instead
- */
-export class HttpError extends KiqError {
-  constructor(code: number, messages: string[]) {
-    super(messages, code);
-    this.name = 'HttpError';
-  }
 }

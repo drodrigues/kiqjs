@@ -1,7 +1,9 @@
 import 'reflect-metadata';
+
 import { plainToInstance } from 'class-transformer';
 import { validate, ValidationError, ValidatorOptions } from 'class-validator';
-import { HttpError } from './router';
+
+import { BadRequest } from './exceptions';
 
 /**
  * Default validator options
@@ -31,7 +33,7 @@ export async function validateDto(
 
   if (errors.length > 0) {
     const messages = formatValidationErrors(errors);
-    throw new HttpError(400, messages);
+    throw BadRequest(messages);
   }
 }
 
@@ -50,11 +52,11 @@ export async function transformAndValidate<T extends object>(
   options: ValidatorOptions = DEFAULT_VALIDATOR_OPTIONS
 ): Promise<T> {
   if (!plain || typeof plain !== 'object') {
-    throw new HttpError(400, ['Request body must be an object']);
+    throw BadRequest('Request body must be an object');
   }
 
   // Transform plain object to class instance
-  const dtoInstance = plainToInstance(dtoClass, plain);
+  const dtoInstance = plainToInstance(dtoClass, plain, { enableImplicitConversion: true });
 
   // Validate the instance
   await validateDto(dtoInstance, options);

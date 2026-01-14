@@ -25,10 +25,9 @@ export { KiqHttpApplication, startKiqHttpApplication, logger } from './applicati
 export type { KiqHttpApplicationOptions } from './application';
 
 // Router utilities
-export { registerControllers, HttpError } from './router';
+export { registerControllers } from './router';
 
 // Exceptions
-export { KiqError } from './exceptions';
 export * from './exceptions';
 
 // Metadata types
