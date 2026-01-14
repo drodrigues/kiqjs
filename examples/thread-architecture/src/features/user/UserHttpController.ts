@@ -10,12 +10,13 @@ import {
   RestController,
   Valid,
 } from '@kiqjs/http';
+import { toResponse } from '@kiqjs/http/dto';
 
-import { toResponse } from '../../core/Result';
 import { User } from '../../domains/User';
 import { UserService } from './UserService';
 
-import type { CreateUserDto, UpdateUserDto, UserResponseDto } from './UserDto';
+import { CreateUserDto, UpdateUserDto } from './UserDto';
+import type { UserResponseDto } from './UserDto';
 /**
  * User HTTP Controller
  * Expõe endpoints REST para operações de usuário
@@ -41,7 +42,7 @@ export class UserHttpController {
 
     // Filter by status if provided
     if (status) {
-      users = users.filter((u) => u.status === status);
+      users = users.filter((u: User) => u.status === status);
     }
 
     return toResponse(users);
