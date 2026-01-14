@@ -7,8 +7,8 @@ import Koa from 'koa';
 import bodyParser, { KoaBodyMiddlewareOptions } from 'koa-body';
 import pino from 'pino';
 
-import { HttpError, registerControllers } from './router';
 import { KiqError } from './exceptions';
+import { registerControllers } from './router';
 
 export const logger = pino();
 
@@ -179,9 +179,9 @@ export class KiqHttpApplication {
       } catch (err: any) {
         if (err instanceof KiqError) {
           // Use message pattern from dto.ts
-          ctx.status = err.httpStatus;
+          ctx.status = err.status;
           ctx.body = {
-            code: err.httpStatus,
+            code: err.status,
             messages: Array.isArray(err.messages) ? err.messages : [err.messages],
           };
         } else {
@@ -208,7 +208,8 @@ export class KiqHttpApplication {
       const start = Date.now();
       await next();
       const ms = Date.now() - start;
-      const { query, body } = ctx.request;
+      const { query } = ctx.request;
+      const body = (ctx.request as any).body;
 
       const isError = ctx.status >= 500;
       const child = logger.child({
