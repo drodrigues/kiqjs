@@ -1,6 +1,6 @@
 import { Service } from '@kiqjs/core';
+import { failure, Result, success } from '@kiqjs/http/dto';
 
-import { failure, Result, success } from '../../core/Result';
 import { User, UserStatus } from '../../domains/User';
 import { UserCreatedEvent } from './UserCreatedEvent';
 import { CreateUserDto, UpdateUserDto } from './UserDto';

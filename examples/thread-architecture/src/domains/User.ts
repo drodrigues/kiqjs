@@ -1,3 +1,5 @@
+import { BadRequest } from '@kiqjs/http';
+
 /**
  * User Domain Entity
  * Representa o modelo de negócio puro de um usuário
@@ -16,11 +18,11 @@ export class User {
 
   private validate(): void {
     if (!this.name || this.name.trim().length === 0) {
-      throw new Error('User name cannot be empty');
+      throw BadRequest('User name cannot be empty');
     }
 
     if (!this.email || !this.isValidEmail(this.email)) {
-      throw new Error('Invalid email format');
+      throw BadRequest('Invalid email format');
     }
   }
 
@@ -33,7 +35,7 @@ export class User {
    */
   activate(): User {
     if (this.status !== UserStatus.PENDING) {
-      throw new Error('Only pending users can be activated');
+      throw BadRequest('Only pending users can be activated');
     }
 
     return new User(this.id, this.name, this.email, UserStatus.ACTIVE, this.createdAt);
@@ -44,7 +46,7 @@ export class User {
    */
   deactivate(): User {
     if (this.status === UserStatus.DELETED) {
-      throw new Error('Deleted users cannot be deactivated');
+      throw BadRequest('Deleted users cannot be deactivated');
     }
 
     return new User(this.id, this.name, this.email, UserStatus.INACTIVE, this.createdAt);
