@@ -110,8 +110,6 @@ function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata
       // Call controller method
       const result = await controllerInstance[route.propertyKey](...args);
 
-      if (result.status) ctx.status = result.status;
-
       if (result !== undefined && result !== null) {
         // Handle response
         // If method returns a value and hasn't set ctx.body, set it

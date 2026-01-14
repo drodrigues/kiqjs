@@ -1,6 +1,8 @@
 import {
+  BadRequest,
   DeleteMapping,
   GetMapping,
+  NotFound,
   PatchMapping,
   PathVariable,
   PostMapping,
@@ -35,7 +37,7 @@ export class UserHttpController {
     const result = await this.userService.getAllUsers();
 
     if (!result.success) {
-      return { success: false, error: result.error };
+      throw BadRequest(result.error);
     }
 
     let users = result.data;
@@ -57,13 +59,10 @@ export class UserHttpController {
     const result = await this.userService.getUserById(id);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 404 };
+      throw NotFound(result.error);
     }
 
-    return {
-      success: true,
-      data: this.toResponseDto(result.data),
-    };
+    return this.toResponseDto(result.data);
   }
 
   /**
@@ -76,14 +75,10 @@ export class UserHttpController {
     const result = await this.userService.createUser(dto);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 400 };
+      throw BadRequest(result.error);
     }
 
-    return {
-      success: true,
-      data: this.toResponseDto(result.data),
-      message: 'User created successfully',
-    };
+    return this.toResponseDto(result.data);
   }
 
   /**
@@ -96,14 +91,10 @@ export class UserHttpController {
     const result = await this.userService.updateUser(id, dto);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 400 };
+      throw BadRequest(result.error);
     }
 
-    return {
-      success: true,
-      data: this.toResponseDto(result.data),
-      message: 'User updated successfully',
-    };
+    return this.toResponseDto(result.data);
   }
 
   /**
@@ -115,14 +106,10 @@ export class UserHttpController {
     const result = await this.userService.activateUser(id);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 400 };
+      throw BadRequest(result.error);
     }
 
-    return {
-      success: true,
-      data: this.toResponseDto(result.data),
-      message: 'User activated successfully',
-    };
+    return this.toResponseDto(result.data);
   }
 
   /**
@@ -134,14 +121,10 @@ export class UserHttpController {
     const result = await this.userService.deactivateUser(id);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 400 };
+      throw BadRequest(result.error);
     }
 
-    return {
-      success: true,
-      data: this.toResponseDto(result.data),
-      message: 'User deactivated successfully',
-    };
+    return this.toResponseDto(result.data);
   }
 
   /**
@@ -153,13 +136,10 @@ export class UserHttpController {
     const result = await this.userService.deleteUser(id);
 
     if (!result.success) {
-      return { success: false, error: result.error, status: 404 };
+      throw NotFound(result.error);
     }
 
-    return {
-      success: true,
-      message: 'User deleted successfully',
-    };
+    return { message: 'User deleted successfully' };
   }
 
   private toResponseDto(user: User): UserResponseDto {
