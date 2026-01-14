@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 // Re-export class-validator decorators so users don't need to install it directly
 export * from 'class-validator';
 

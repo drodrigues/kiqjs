@@ -1,26 +1,27 @@
 import 'reflect-metadata';
+
 import {
-  RestController,
-  GetMapping,
-  PostMapping,
-  PutMapping,
+  Context,
   DeleteMapping,
+  GetMapping,
   PatchMapping,
   PathVariable,
-  RequestBody,
-  RequestParam,
-  RequestHeader,
-  RequestPart,
-  Context,
+  PostMapping,
+  PutMapping,
   Request,
-  Response,
+  RequestBody,
+  RequestHeader,
   RequestMapping,
+  RequestParam,
+  RequestPart,
+  Response,
+  RestController,
 } from '../src/decorators';
 import {
-  META_REST_CONTROLLER,
-  META_ROUTE_HANDLER,
   META_PARAM_METADATA,
   META_REQUEST_MAPPING,
+  META_REST_CONTROLLER,
+  META_ROUTE_HANDLER,
 } from '../src/metadata-keys';
 
 describe('HTTP Decorators', () => {
@@ -142,11 +143,7 @@ describe('HTTP Decorators', () => {
         getUser(@PathVariable('id') id: string) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        UserController.prototype,
-        'getUser'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, UserController.prototype, 'getUser');
       expect(params).toHaveLength(1);
       expect(params[0]).toMatchObject({
         index: 0,
@@ -178,11 +175,7 @@ describe('HTTP Decorators', () => {
         search(@RequestParam('query') query: string) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        UserController.prototype,
-        'search'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, UserController.prototype, 'search');
       expect(params[0]).toMatchObject({
         type: 'query',
         name: 'query',
@@ -260,11 +253,7 @@ describe('HTTP Decorators', () => {
         handle(@Context() ctx: any) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        TestController.prototype,
-        'handle'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, TestController.prototype, 'handle');
       expect(params).toHaveLength(1);
       expect(params[0]).toMatchObject({
         index: 0,
@@ -279,11 +268,7 @@ describe('HTTP Decorators', () => {
         handle(@Request() req: any) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        TestController.prototype,
-        'handle'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, TestController.prototype, 'handle');
       expect(params).toHaveLength(1);
       expect(params[0]).toMatchObject({
         index: 0,
@@ -298,11 +283,7 @@ describe('HTTP Decorators', () => {
         handle(@Response() res: any) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        TestController.prototype,
-        'handle'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, TestController.prototype, 'handle');
       expect(params).toHaveLength(1);
       expect(params[0]).toMatchObject({
         index: 0,
@@ -317,11 +298,7 @@ describe('HTTP Decorators', () => {
         search(@RequestParam('query', false) query?: string) {}
       }
 
-      const params = Reflect.getMetadata(
-        META_PARAM_METADATA,
-        UserController.prototype,
-        'search'
-      );
+      const params = Reflect.getMetadata(META_PARAM_METADATA, UserController.prototype, 'search');
       expect(params[0]).toMatchObject({
         type: 'query',
         name: 'query',

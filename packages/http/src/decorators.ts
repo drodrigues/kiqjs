@@ -8,8 +8,8 @@ import {
   META_REQUEST_MAPPING,
   META_REST_CONTROLLER,
   META_ROUTE_HANDLER,
-  ParamMetadata,
   ParamDecoratorOptions,
+  ParamMetadata,
   RequestMappingMetadata,
   RouteHandlerMetadata,
 } from './metadata-keys';
@@ -186,7 +186,8 @@ function createParamDecorator(type: ParamMetadata['type']) {
       // Check if @Valid() was used on this parameter
       // @Valid() runs before this decorator (right-to-left execution)
       const key = Symbol.for(`kiq:http:dto-class:${propertyKey}:${parameterIndex}`);
-      const dtoClass = Reflect.getMetadata(key, target);
+      const dtoClass = Reflect.getMetadata(key, target, propertyKey);
+
       if (dtoClass) {
         param.dtoClass = dtoClass;
       }
@@ -261,7 +262,7 @@ export function Valid() {
     // Since decorators execute right-to-left, @Valid() runs before @RequestBody()
     // We store the class here, and @RequestBody() will retrieve it
     const key = Symbol.for(`kiq:http:dto-class:${propertyKey}:${parameterIndex}`);
-    Reflect.defineMetadata(key, dtoClass, target);
+    Reflect.defineMetadata(key, dtoClass, target, propertyKey);
   };
 }
 
