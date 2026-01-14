@@ -1,0 +1,13 @@
+# Production-specific configuration
+# Overrides values from application.yml when NODE_ENV=production
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+features:
+  userManagement:
+    maxUsers: 10000
+
+logging:
+  level: warn

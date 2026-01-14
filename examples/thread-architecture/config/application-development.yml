@@ -1,0 +1,10 @@
+# Development-specific configuration
+# Overrides values from application.yml when NODE_ENV=development
+
+logging:
+  level: debug
+  format: pretty
+
+features:
+  userManagement:
+    maxUsers: 100

@@ -1,0 +1,29 @@
+# Application Configuration (Spring Boot style)
+# This file is loaded automatically by KiqJS
+
+# Server configuration
+server:
+  port: 3000
+  host: localhost
+  prefix: /api
+
+# Application settings
+app:
+  name: THREAD Architecture Example
+  version: 1.0.0
+  description: Demonstração da arquitetura THREAD com KiqJS
+
+# Feature flags
+features:
+  userManagement:
+    enabled: true
+    maxUsers: 1000
+
+  events:
+    enabled: true
+    publisher: console
+
+# Logging
+logging:
+  level: info
+  format: json
