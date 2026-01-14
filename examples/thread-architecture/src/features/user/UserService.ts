@@ -8,11 +8,6 @@ import { CreateUserDto, UpdateUserDto } from './UserDto';
 import { UserEventPublisher } from './UserEventPublisher';
 import { UserUpdatedEvent } from './UserUpdatedEvent';
 
-/**
- * User Service
- * Orquestra as operações de negócio relacionadas a usuários
- * Coordena entre domínio, repositório e eventos
- */
 @Service()
 export class UserService {
   constructor(
@@ -21,20 +16,16 @@ export class UserService {
   ) {}
 
   async createUser(dto: CreateUserDto): Promise<Result<User, string>> {
-    // Business rule: email must be unique
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
       return failure(`User with email ${dto.email} already exists`);
     }
 
     try {
-      // Create domain entity
       const user = new User(this.generateId(), dto.name, dto.email, UserStatus.PENDING, new Date());
 
-      // Persist
       await this.userRepository.save(user);
 
-      // Publish event
       await this.userEventPublisher.publishUserCreated(new UserCreatedEvent(user));
 
       return success(user);
@@ -63,7 +54,6 @@ export class UserService {
     }
 
     try {
-      // Check email uniqueness if changing email
       if (dto.email && dto.email !== existingUser.email) {
         const emailTaken = await this.userRepository.findByEmail(dto.email);
         if (emailTaken) {
@@ -71,7 +61,6 @@ export class UserService {
         }
       }
 
-      // Create updated user
       const updatedUser = new User(
         existingUser.id,
         dto.name ?? existingUser.name,
@@ -80,10 +69,8 @@ export class UserService {
         existingUser.createdAt
       );
 
-      // Persist
       await this.userRepository.save(updatedUser);
 
-      // Publish event
       await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(updatedUser));
 
       return success(updatedUser);
@@ -99,7 +86,6 @@ export class UserService {
     }
 
     try {
-      // Use domain logic
       const activatedUser = existingUser.activate();
       await this.userRepository.save(activatedUser);
       await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(activatedUser));
@@ -117,7 +103,6 @@ export class UserService {
     }
 
     try {
-      // Use domain logic
       const deactivatedUser = existingUser.deactivate();
       await this.userRepository.save(deactivatedUser);
       await this.userEventPublisher.publishUserUpdated(new UserUpdatedEvent(deactivatedUser));

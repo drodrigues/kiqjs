@@ -4,11 +4,6 @@ import { logger } from '@kiqjs/http';
 import { UserCreatedEvent } from './UserCreatedEvent';
 import { UserUpdatedEvent } from './UserUpdatedEvent';
 
-/**
- * User Event Publisher
- * Responsável por publicar eventos de domínio do usuário
- * Na implementação real, integraria com Kafka/Redis
- */
 @Service()
 export class UserEventPublisher {
   async publishUserCreated(event: UserCreatedEvent): Promise<void> {

@@ -2,11 +2,6 @@ import { Service } from '@kiqjs/core';
 
 import { User, UserStatus } from './User';
 
-/**
- * User Repository
- * Responsável pela persistência de usuários
- * Camada de infraestrutura da feature
- */
 @Service()
 export class UserRepository {
   private users = new Map<string, User>();

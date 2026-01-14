@@ -1,9 +1,6 @@
 import { BaseDomainEvent } from '../../core/DomainEvent';
 import { User } from '../../domains/User';
 
-/**
- * User Created Domain Event
- */
 export class UserCreatedEvent extends BaseDomainEvent {
   constructor(user: User) {
     super('USER_CREATED', user.id, {

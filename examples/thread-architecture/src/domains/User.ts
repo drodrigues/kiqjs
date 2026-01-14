@@ -1,10 +1,5 @@
 import { BadRequest } from '@kiqjs/http';
 
-/**
- * User Domain Entity
- * Representa o modelo de negócio puro de um usuário
- * Não depende de framework, banco de dados ou serviços externos
- */
 export class User {
   constructor(
     public readonly id: string,

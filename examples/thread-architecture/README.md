@@ -1,8 +1,8 @@
 # THREAD Architecture Example
 
-> **Arquitetura de Software Orientada a Domínio, Produto e Execução**
+**Arquitetura de Software Orientada a Domínio, Produto e Execução**
 
-Este exemplo demonstra como implementar a **THREAD Architecture** usando **KiqJS** e **Spring Boot-style decorators**.
+Este exemplo demonstra como implementar a **THREAD Architecture** usando **KiqJS** com Spring Boot-style decorators, YAML configuration, profile-based activation, e resource loading.
 
 ## O que é THREAD Architecture?
 
@@ -17,35 +17,188 @@ A THREAD Architecture é um padrão arquitetural que prioriza:
 ## Estrutura do Projeto
 
 ```
-src/
-├── Application.ts                          # Entry point
-├── config/
-│   └── AppConfig.ts                        # Configurações explícitas
-├── core/
-│   ├── Result.ts                           # Result type pattern
-│   └── DomainEvent.ts                      # Base para eventos
-├── domains/
-│   └── User.ts                             # Entidade de domínio pura
-└── features/
-    └── user/                               # Feature vertical completa
-        ├── UserDto.ts                      # Data transfer objects
-        ├── UserRepository.ts               # Persistência
-        ├── UserService.ts                  # Lógica de negócio
-        ├── UserHttpController.ts           # Endpoints HTTP
-        ├── UserEventPublisher.ts           # Publicação de eventos
-        ├── UserCreatedEvent.ts             # Evento de criação
-        └── UserUpdatedEvent.ts             # Evento de atualização
+thread-architecture/
+├── resources/                              # Spring Boot style resources
+│   ├── application.yml                     # Base configuration
+│   ├── application-development.yml         # Dev profile config
+│   ├── application-production.yml          # Prod profile config
+│   └── templates/                          # Email templates
+│       └── welcome-email.html
+├── src/
+│   ├── Application.ts                      # Entry point
+│   ├── config/
+│   │   └── AppConfig.ts                    # Configuration class with @Bean
+│   ├── domains/
+│   │   └── User.ts                         # Pure domain entity
+│   └── features/
+│       └── user/                           # Vertical feature slice
+│           ├── UserDto.ts                  # Data transfer objects
+│           ├── UserRepository.ts           # Persistence layer
+│           ├── UserService.ts              # Business logic
+│           ├── UserHttpController.ts       # HTTP endpoints
+│           ├── UserLogger.ts               # Profile-based loggers
+│           └── TemplateService.ts          # Resource loading example
+├── package.json
+└── tsconfig.json
 ```
 
-## Camadas e Responsabilidades
+## KiqJS Features Demonstrated
 
-### `domains/` - Modelo de Negócio Puro
+### 1. Dependency Injection
 
-Contém **entidades**, **value objects** e **regras invariantes**.
+```typescript
+@Service()
+export class UserService {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userEventPublisher: UserEventPublisher
+  ) {}
+}
+```
 
-- ✅ Não depende de framework
-- ✅ Não depende de banco de dados
-- ✅ Apenas lógica de domínio
+### 2. YAML Configuration
+
+```yaml
+# resources/application.yml
+spring:
+  profiles:
+    active: development
+
+server:
+  port: 3000
+  host: localhost
+  prefix: /api
+
+app:
+  name: THREAD Architecture Example
+  version: 1.0.0
+
+features:
+  userManagement:
+    enabled: true
+    maxUsers: 1000
+```
+
+Inject values with `@Value`:
+
+```typescript
+@Configuration()
+export class AppConfig {
+  @Value('server.port')
+  serverPort!: number;
+
+  @Value('app.name')
+  appName!: string;
+}
+```
+
+### 3. Profile-based Component Activation
+
+```typescript
+// Active only in development
+@Service()
+@Profile('development')
+export class DevelopmentUserLogger implements UserLogger {
+  logUserCreated(userId: string, name: string) {
+    console.log(`[DEV] User created: ${userId}, ${name}`);
+  }
+}
+
+// Active only in production
+@Service()
+@Profile('production')
+export class ProductionUserLogger implements UserLogger {
+  logUserCreated(userId: string, name: string) {
+    // Send to monitoring service
+  }
+}
+
+// Active in all profiles except production
+@Service()
+@Profile('!production')
+export class DebugUserLogger {
+  logDebugInfo(message: string, data?: any) {
+    console.log(`[DEBUG] ${message}`, data);
+  }
+}
+```
+
+### 4. Resource Loading
+
+```typescript
+@Service()
+export class TemplateService {
+  private resourceLoader = new ResourceLoader();
+
+  renderWelcomeEmail(username: string, email: string) {
+    // Load template from resources/templates/
+    const template = this.resourceLoader.getResourceAsString(
+      'templates/welcome-email.html'
+    );
+    return template
+      .replace('{{username}}', username)
+      .replace('{{email}}', email);
+  }
+}
+```
+
+### 5. REST Controllers
+
+```typescript
+@RestController('/users')
+export class UserHttpController {
+  constructor(
+    private readonly userService: UserService,
+    private readonly templateService: TemplateService
+  ) {}
+
+  @GetMapping()
+  async getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+
+  @PostMapping()
+  async createUser(@RequestBody() @Valid() dto: CreateUserDto) {
+    return this.userService.createUser(dto);
+  }
+
+  @GetMapping('/:id/welcome-email')
+  async getWelcomeEmail(@PathVariable('id') id: string) {
+    const user = await this.userService.getUserById(id);
+    const html = this.templateService.renderWelcomeEmail(
+      user.name,
+      user.email
+    );
+    return { subject: 'Welcome!', html };
+  }
+}
+```
+
+### 6. DTO Validation
+
+```typescript
+import { IsString, IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(3)
+  name!: string;
+
+  @IsEmail()
+  email!: string;
+}
+```
+
+## Layers and Responsibilities
+
+### `domains/` - Pure Business Model
+
+Contains **entities**, **value objects**, and **invariant rules**.
+
+- No framework dependencies
+- No database dependencies
+- Pure domain logic
 
 ```typescript
 // domains/User.ts
@@ -54,195 +207,261 @@ export class User {
     if (this.status !== UserStatus.PENDING) {
       throw new Error('Only pending users can be activated');
     }
-    return new User(/* ... */);
+    return new User(/* ... */, UserStatus.ACTIVE, /* ... */);
   }
 }
 ```
 
-### `features/<feature>/` - Execução do Produto
+### `features/<feature>/` - Vertical Feature Slices
 
-Cada **feature** é uma **fatia vertical completa**:
+Each **feature** is a **complete vertical slice**:
 
 - HTTP Controller → Service → Repository → Events
-- Um arquivo por responsabilidade
-- Nome do arquivo indica claramente a função
+- One file per responsibility
+- File name clearly indicates its function
 
 ```typescript
 // features/user/UserHttpController.ts
-@RestController('/api/users')
+@RestController('/users')
 export class UserHttpController {
   @PostMapping()
-  async createUser(@RequestBody() dto: CreateUserDto) {
+  async createUser(@RequestBody() @Valid() dto: CreateUserDto) {
     // ...
   }
 }
 ```
 
-### `core/` - Abstrações Reutilizáveis
+### `config/` - Explicit Configuration
 
-Tipos e padrões neutros de domínio:
-
-- `Result<T, E>` - Pattern para operações que podem falhar
-- `DomainEvent` - Base para eventos de domínio
-
-```typescript
-// core/Result.ts
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
-```
-
-### `config/` - Configurações Explícitas
-
-Configurações de infraestrutura e feature flags.
+Infrastructure configuration and feature flags.
 
 ```typescript
 // config/AppConfig.ts
 @Configuration()
 export class AppConfig {
+  @Value('server.port')
+  serverPort!: number;
+
   @Bean()
   serverConfig() {
-    return { port: 3000, host: 'localhost' };
+    return {
+      port: this.serverPort,
+      host: this.serverHost,
+      prefix: this.serverPrefix,
+    };
+  }
+
+  @Bean()
+  featureFlags() {
+    return {
+      userManagement: {
+        enabled: this.userManagementEnabled,
+        maxUsers: this.maxUsers,
+      },
+    };
   }
 }
 ```
 
-## Fluxo de uma Requisição
+### `resources/` - Non-Code Assets
+
+Spring Boot style resources folder for:
+
+- YAML configuration files
+- Email templates
+- Static files
+- Seed data
+
+## Request Flow
 
 ```
 HTTP Request
     ↓
-UserHttpController        ← Entrada HTTP
+UserHttpController        ← HTTP Entry
     ↓
-UserService               ← Orquestração + Regras
+UserService               ← Orchestration + Business Rules
     ↓
-User (Domain)             ← Validações de domínio
+User (Domain)             ← Domain Validations
     ↓
-UserRepository            ← Persistência
+UserRepository            ← Persistence
     ↓
-UserEventPublisher        ← Publicação de evento
+UserEventPublisher        ← Event Publishing
     ↓
-Kafka/Redis (futuro)
+Kafka/Redis (future)
 ```
 
-## Padrão de Nomenclatura
+## Naming Convention
 
-Todos os arquivos seguem **PascalCase** com sufixo indicando a responsabilidade:
+All files follow **PascalCase** with suffix indicating responsibility:
 
-- `UserHttpController.ts` - Controller HTTP
-- `UserService.ts` - Serviço de aplicação
-- `UserRepository.ts` - Camada de dados
-- `UserCreatedEvent.ts` - Evento de domínio
-- `UserEventPublisher.ts` - Publicador de eventos
+- `UserHttpController.ts` - HTTP controller
+- `UserService.ts` - Application service
+- `UserRepository.ts` - Data layer
+- `UserCreatedEvent.ts` - Domain event
+- `UserEventPublisher.ts` - Event publisher
 - `UserDto.ts` - Data transfer objects
+- `UserLogger.ts` - Logging implementations
 
-## Como Executar
+## How to Run
+
+### Development Mode
 
 ```bash
-# Instalar dependências
+# Install dependencies
 pnpm install
 
-# Rodar em modo desenvolvimento
+# Run in development mode (spring.profiles.active=development)
 pnpm dev
 ```
 
-O servidor iniciará em `http://localhost:3000`
+The server will start at `http://localhost:3000`
 
-## Endpoints Disponíveis
+### Production Mode
 
-### Listar usuários
+```bash
+# Build
+pnpm build
+
+# Run in production mode
+NODE_ENV=production node dist/Application.js
+```
+
+Or set in `resources/application.yml`:
+
+```yaml
+spring:
+  profiles:
+    active: production
+```
+
+## Available Endpoints
+
+### List Users
+
 ```bash
 curl http://localhost:3000/api/users
 ```
 
-### Filtrar por status
+### Filter by Status
+
 ```bash
 curl "http://localhost:3000/api/users?status=ACTIVE"
 ```
 
-### Buscar usuário por ID
+### Get User by ID
+
 ```bash
 curl http://localhost:3000/api/users/1
 ```
 
-### Criar usuário
+### Create User
+
 ```bash
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
   -d '{"name": "Bob Wilson", "email": "bob@example.com"}'
 ```
 
-### Atualizar usuário
+### Update User
+
 ```bash
 curl -X PUT http://localhost:3000/api/users/1 \
   -H "Content-Type: application/json" \
   -d '{"name": "John Updated"}'
 ```
 
-### Ativar usuário
+### Activate User
+
 ```bash
 curl -X PATCH http://localhost:3000/api/users/2/activate
 ```
 
-### Desativar usuário
+### Deactivate User
+
 ```bash
 curl -X PATCH http://localhost:3000/api/users/1/deactivate
 ```
 
-### Deletar usuário
+### Delete User
+
 ```bash
 curl -X DELETE http://localhost:3000/api/users/1
 ```
 
-## Princípios Aplicados
+### Get Welcome Email (Resource Loading Demo)
 
-### 1. Domínio acima do framework
+```bash
+curl http://localhost:3000/api/users/1/welcome-email
+```
+
+This endpoint demonstrates:
+- Resource loading from `resources/templates/`
+- Template rendering
+- Integration with domain entities
+
+## Principles Applied
+
+### 1. Domain Above Framework
+
 ```typescript
-// ✅ Domínio puro
+// Good: Pure domain
 class User {
   activate(): User { /* ... */ }
 }
 
-// ❌ Domínio acoplado ao framework
+// Bad: Domain coupled to framework
 class User extends KoaModel { /* ... */ }
 ```
 
-### 2. Entrega vertical sempre
-Cada feature contém **tudo** que precisa:
+### 2. Vertical Delivery Always
+
+Each feature contains **everything** it needs:
 - Controller (HTTP)
-- Service (Negócio)
-- Repository (Dados)
-- Events (Comunicação)
+- Service (Business)
+- Repository (Data)
+- Events (Communication)
+- DTOs (Transfer)
+- Loggers (Observability)
 
-### 3. Um motivo para mudar
-Cada arquivo tem **uma única responsabilidade**:
-- `UserHttpController` - Só cuida de HTTP
-- `UserService` - Só orquestra negócio
-- `UserRepository` - Só persiste dados
+### 3. Single Responsibility
 
-### 4. Eventos como linguagem
+Each file has **one responsibility**:
+- `UserHttpController` - Only handles HTTP
+- `UserService` - Only orchestrates business logic
+- `UserRepository` - Only persists data
+- `UserLogger` - Only logs events
+
+### 4. Events as Language
+
 ```typescript
-// Sistema comunica via eventos
+// System communicates via events
 await this.publisher.publishUserCreated(new UserCreatedEvent(user));
 ```
 
-### 5. Nomes são contratos
-- `UserHttpController` → Óbvio que trata HTTP
-- `UserCreatedEvent` → Óbvio que é um evento de criação
-- `UserRepository` → Óbvio que persiste dados
+### 5. Names are Contracts
 
-## Benefícios da THREAD Architecture
+- `UserHttpController` → Obviously handles HTTP
+- `UserCreatedEvent` → Obviously a creation event
+- `UserRepository` → Obviously persists data
 
-✅ **Clareza** - Qualquer dev entende a estrutura rapidamente
-✅ **Escalabilidade** - Adicionar features não afeta outras
-✅ **Testabilidade** - Domínio isolado é fácil de testar
-✅ **Manutenibilidade** - Mudanças são localizadas
-✅ **Onboarding rápido** - Estrutura previsível
-✅ **AI-friendly** - Fácil indexação e análise
+## Benefits of THREAD Architecture
 
-## Comparação: Antes vs. Depois
+**Clarity** - Any developer understands the structure quickly
 
-### ❌ Estrutura Tradicional
+**Scalability** - Adding features doesn't affect others
+
+**Testability** - Isolated domain is easy to test
+
+**Maintainability** - Changes are localized
+
+**Fast Onboarding** - Predictable structure
+
+**AI-friendly** - Easy indexing and analysis
+
+## Comparison: Before vs. After
+
+### Traditional Structure
+
 ```
 src/
 ├── controllers/
@@ -257,37 +476,100 @@ src/
     ├── UserRepository.ts
     └── ...
 ```
-**Problema**: Features espalhadas por múltiplas pastas
 
-### ✅ THREAD Architecture
+**Problem**: Features scattered across multiple folders
+
+### THREAD Architecture
+
 ```
 src/
 ├── features/
 │   ├── user/
 │   │   ├── UserHttpController.ts
 │   │   ├── UserService.ts
-│   │   └── UserRepository.ts
+│   │   ├── UserRepository.ts
+│   │   └── UserLogger.ts
 │   ├── order/
 │   │   ├── OrderHttpController.ts
 │   │   ├── OrderService.ts
 │   │   └── OrderRepository.ts
 ```
-**Vantagem**: Feature completa em um só lugar
 
-## Próximos Passos
+**Advantage**: Complete feature in one place
 
-Para uma implementação completa de produção, adicione:
+## Configuration Profiles
 
-- [ ] Integração real com Kafka/Redis
-- [ ] Banco de dados (PostgreSQL, MongoDB, etc)
-- [ ] Authentication/Authorization
-- [ ] Request validation com class-validator
-- [ ] Logging estruturado
-- [ ] Metrics e observability
-- [ ] Testes automatizados
+### Development Profile
 
-## Referências
+```yaml
+# resources/application-development.yml
+features:
+  analytics: true
+  debugMode: true
 
-- [THREAD Architecture - Documentação Completa](https://thread.com.br/architecture)
-- [KiqJS - Documentação](../../packages/core/README.md)
+logging:
+  level: debug
+```
+
+Components active in development:
+- `DevelopmentUserLogger` - Verbose logging
+- `DebugUserLogger` - Debug utilities
+
+### Production Profile
+
+```yaml
+# resources/application-production.yml
+server:
+  port: 8080
+  host: 0.0.0.0
+
+features:
+  analytics: false
+  debugMode: false
+
+logging:
+  level: warn
+```
+
+Components active in production:
+- `ProductionUserLogger` - Minimal logging, sends to monitoring
+
+## Testing
+
+The architecture makes testing straightforward:
+
+```typescript
+describe('UserService', () => {
+  it('should create user', () => {
+    const repo = new InMemoryUserRepository();
+    const service = new UserService(repo, eventPublisher);
+
+    const result = await service.createUser({
+      name: 'Test',
+      email: 'test@example.com'
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
+```
+
+## Next Steps
+
+For a complete production implementation, add:
+
+- Real Kafka/Redis integration
+- Database (PostgreSQL, MongoDB, etc)
+- Authentication/Authorization
+- Structured logging
+- Metrics and observability
+- Automated tests
+- CI/CD pipeline
+- Docker deployment
+
+## References
+
+- [THREAD Architecture - Full Documentation](https://thread.com.br/architecture)
+- [KiqJS Documentation](../../README.md)
 - [Spring Boot](https://spring.io/projects/spring-boot)
+- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)

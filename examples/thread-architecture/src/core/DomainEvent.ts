@@ -1,6 +1,3 @@
-/**
- * Domain Event Base
- */
 export interface DomainEvent {
   eventType: string;
   occurredAt: Date;

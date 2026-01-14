@@ -1,13 +1,5 @@
 import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from '@kiqjs/http/dto';
 
-/**
- * Data Transfer Objects for User feature
- */
-
-/**
- * DTO for creating a new user
- * Includes automatic validation with class-validator
- */
 export class CreateUserDto {
   @IsString({ message: 'Name must be a string' })
   @MinLength(3, { message: 'Name must be at least 3 characters long' })
@@ -19,10 +11,6 @@ export class CreateUserDto {
   email!: string;
 }
 
-/**
- * DTO for updating a user
- * All fields are optional, but if provided, must be valid
- */
 export class UpdateUserDto {
   @IsString({ message: 'Name must be a string' })
   @MinLength(3, { message: 'Name must be at least 3 characters long' })
@@ -36,9 +24,6 @@ export class UpdateUserDto {
   email?: string;
 }
 
-/**
- * DTO for user response
- */
 export interface UserResponseDto {
   id: string;
   name: string;
