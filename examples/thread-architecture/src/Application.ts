@@ -15,8 +15,9 @@ class Application {
     console.log('Starting THREAD Architecture Application...\n');
 
     // Configuration is automatically loaded from:
-    // - application.yml (project root)
-    // - application-{NODE_ENV}.yml (profile-specific)
+    // - resources/application.yml (base configuration)
+    // - resources/application-{NODE_ENV}.yml (profile-specific)
+    // Following Spring Boot convention for resources folder
     // Values can be injected using @Value decorator in any service
     const app = new KiqHttpApplication(Application, {
       port: 3000, // Can be overridden by application.yml or SERVER_PORT env var

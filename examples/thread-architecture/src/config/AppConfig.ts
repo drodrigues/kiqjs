@@ -3,11 +3,11 @@ import { Bean, Configuration, Value } from '@kiqjs/core';
 /**
  * Application Configuration
  * Uses Spring Boot style YAML configuration with @Value decorator
- * Configuration is loaded from application.yml and application-{profile}.yml
+ * Configuration is loaded from resources/application.yml and resources/application-{profile}.yml
  */
 @Configuration()
 export class AppConfig {
-  // Inject configuration values from application.yml using @Value decorator
+  // Inject configuration values from resources/application.yml using @Value decorator
   @Value('app.name')
   appName!: string;
 

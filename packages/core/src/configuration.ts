@@ -6,23 +6,27 @@ import * as yaml from 'js-yaml';
 /**
  * Configuration loader for YAML files (Spring Boot style)
  *
- * Loads configuration from project root:
- * 1. application.yml (base configuration)
- * 2. application-{profile}.yml (profile-specific configuration)
+ * Loads configuration with auto-detection:
+ * 1. resources/application.yml (base configuration) - preferred
+ * 2. resources/application-{profile}.yml (profile-specific)
  * 3. Environment variables (highest priority)
  *
- * Files are placed in project root (same level as package.json), following
- * Node.js conventions like .env files.
+ * Auto-detects resources directory (prefers resources/, falls back to root).
+ * Following Spring Boot convention: resources/ for configs/templates, src/ for code.
  *
  * @example
- * // Project structure:
+ * // Project structure (Spring Boot style):
  * // my-project/
- * //   ├── application.yml
- * //   ├── application-production.yml
+ * //   ├── resources/               (YAML configs, templates, static files)
+ * //   │   ├── application.yml
+ * //   │   └── application-production.yml
+ * //   ├── src/
+ * //   │   └── config/              (TypeScript configuration classes)
+ * //   │       └── AppConfig.ts
  * //   ├── package.json
- * //   └── src/
+ * //   └── Dockerfile
  *
- * // application.yml
+ * // resources/application.yml
  * server:
  *   port: 3000
  *   host: localhost
@@ -31,7 +35,7 @@ import * as yaml from 'js-yaml';
  *   host: localhost
  *   port: 5432
  *
- * // application-production.yml
+ * // resources/application-production.yml
  * database:
  *   host: prod-db.example.com
  */
@@ -42,14 +46,14 @@ export class ConfigurationLoader {
   /**
    * Load configuration from YAML files
    *
-   * @param baseDir Directory containing configuration files (default: process.cwd())
+   * @param baseDir Directory containing configuration files (default: auto-detect)
    * @param profile Active profile (default: process.env.NODE_ENV or 'development')
    */
   constructor(baseDir?: string, profile?: string) {
     const activeProfile = profile || process.env.NODE_ENV || 'development';
 
-    // Default to project root (like .env files in Node.js)
-    const configDir = baseDir || process.cwd();
+    // Auto-detect config directory: prefer config/ folder, fallback to root
+    const configDir = baseDir || this.findConfigDirectory();
 
     // Load base configuration (application.yml)
     this.loadConfigFile(configDir, 'application.yml');
@@ -64,6 +68,18 @@ export class ConfigurationLoader {
 
     // Override with environment variables
     this.overrideWithEnv();
+  }
+
+  /**
+   * Find configuration directory
+   * Tries resources/ first (Spring Boot style), then falls back to project root
+   */
+  private findConfigDirectory(): string {
+    const resourcesDir = path.join(process.cwd(), 'resources');
+    if (fs.existsSync(resourcesDir)) {
+      return resourcesDir;
+    }
+    return process.cwd();
   }
 
   /**

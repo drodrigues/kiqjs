@@ -4,21 +4,23 @@ KiqJS Core supports Spring Boot style YAML configuration files with profile supp
 
 ## Features
 
-- 📄 **YAML Configuration Files**: Use `application.yml` in project root
+- 📄 **YAML Configuration Files**: Use `application.yml` in `resources/` folder (Spring Boot convention)
 - 🎯 **Profile Support**: Environment-specific configs with `application-{profile}.yml`
 - 🔧 **Environment Variables**: Override any config with env vars
 - 💉 **@Value Decorator**: Inject configuration values into your classes
 - 🌳 **Nested Properties**: Access nested config with dot notation
-- 📁 **Node.js Convention**: Files in project root (like `.env`)
+- 🔍 **Auto-Detection**: Automatically finds `resources/` folder or falls back to project root
+- 🐳 **Docker-Friendly**: Clean separation for easy containerization
+- 🎨 **Multi-Purpose**: Resources folder can also hold templates, static files, etc.
 
 ## Quick Start
 
-### 1. Create Configuration Files
+### 1. Create Resources Directory
 
-Create an `application.yml` in your project root (same level as `package.json`):
+Create a `resources/` directory in your project root (Spring Boot style):
 
 ```yaml
-# application.yml
+# resources/application.yml
 server:
   port: 3000
   host: localhost
@@ -35,10 +37,10 @@ features:
 
 ### 2. Profile-Specific Configuration
 
-Create profile-specific configurations in the project root:
+Create profile-specific configurations:
 
 ```yaml
-# application-production.yml
+# resources/application-production.yml
 server:
   port: 8080
   host: 0.0.0.0
@@ -49,20 +51,28 @@ database:
 ```
 
 ```yaml
-# application-development.yml
+# resources/application-development.yml
 features:
   analytics: true
 ```
 
-Your project structure:
+### Project Structure
+
 ```
 my-project/
-  ├── application.yml
-  ├── application-development.yml
-  ├── application-production.yml
+  ├── resources/                        # Resources (Spring Boot style)
+  │   ├── application.yml               # Base configuration
+  │   ├── application-development.yml   # Dev overrides
+  │   ├── application-production.yml    # Prod overrides
+  │   └── templates/                    # (Optional) Template files
+  ├── src/
+  │   └── config/                       # Configuration classes (TypeScript)
+  │       └── AppConfig.ts              # @Configuration classes
   ├── package.json
-  └── src/
+  └── Dockerfile
 ```
+
+**Note:** Following Spring Boot convention - `resources/` for non-code assets (YAML, templates, static files), `src/` for code. No conflict!
 
 ### 3. Use @Value Decorator
 
@@ -104,14 +114,23 @@ const serverConfig = config.getObject('server');
 
 Configuration is loaded and merged in this order (later overrides earlier):
 
-1. `application.yml` or `application.yaml` (base configuration)
-2. `application-{profile}.yml` (profile-specific)
+1. `resources/application.yml` or `application.yaml` (base configuration)
+2. `resources/application-{profile}.yml` (profile-specific)
 3. Environment variables (highest priority)
 
 The active profile is determined by:
 - Explicit profile parameter
 - `NODE_ENV` environment variable
 - Defaults to `'development'`
+
+## Directory Detection
+
+The ConfigurationLoader automatically detects the resources directory (Spring Boot style):
+
+1. **Preferred**: `resources/` folder in project root
+2. **Fallback**: Project root (for backward compatibility)
+
+This follows Spring Boot convention and keeps your project organized.
 
 ## Environment Variable Overrides
 
@@ -236,6 +255,54 @@ if (config.has('features.newFeature')) {
 }
 ```
 
+## Docker Support
+
+The `resources/` folder structure makes Docker deployments clean and efficient (Spring Boot style):
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only what's needed
+COPY package*.json ./
+RUN npm ci --production
+
+COPY resources/ ./resources/     # Configuration files (Spring Boot style)
+COPY dist/ ./dist/               # Compiled code
+
+CMD ["node", "dist/index.js"]
+```
+
+### Multi-stage Build Example
+
+```dockerfile
+# Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY resources/ ./resources/     # Resources folder (configs, templates, etc.)
+COPY --from=builder /app/dist ./dist/
+CMD ["node", "dist/index.js"]
+```
+
+Benefits:
+- ✅ Clean separation of concerns (Spring Boot style)
+- ✅ Easy to override configs per environment
+- ✅ Smaller Docker layers
+- ✅ No root pollution
+- ✅ Can hold configs, templates, and static files
+
 ## Best Practices
 
 1. **Use Profiles**: Separate configs for dev/staging/prod
@@ -243,6 +310,9 @@ if (config.has('features.newFeature')) {
 3. **Environment Secrets**: Never commit secrets, use env vars
 4. **Type Safety**: Use `@Value` decorator for type-safe injection
 5. **Documentation**: Comment your YAML files
+6. **Docker**: Keep configs in `resources/` for clean containerization (Spring Boot style)
+7. **Git**: Add `resources/application-local.yml` to `.gitignore` for local overrides
+8. **Multi-Purpose**: Use `resources/` for templates, static files, and other non-code assets
 
 ## Migration from process.env
 
