@@ -14,7 +14,10 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "js-yaml": "^4.1.1",
     "reflect-metadata": "^0.2.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9"
+  }
 }
