@@ -1,14 +1,16 @@
 import 'reflect-metadata';
-import { transformAndValidate, formatValidationErrors, HttpError } from '../src/index';
-import { IsString, IsEmail, MinLength, IsOptional } from '../src/dto';
+
+import { IsEmail, IsOptional, IsString, MinLength } from '../src/dto';
+import { KiqError } from '../src/exceptions';
+import { transformAndValidate } from '../src/validation';
 
 class TestDto {
   @IsString()
   @MinLength(3)
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsOptional()
@@ -46,84 +48,80 @@ describe('Validation', () => {
       expect(result.address).toBeUndefined();
     });
 
-    it('should throw HttpError for invalid name (too short)', async () => {
+    it('should throw KiqError for invalid name (too short)', async () => {
       const plain = {
         name: 'Jo',
         email: 'john@example.com',
       };
 
-      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(HttpError);
+      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(KiqError);
 
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         expect(Array.isArray(error.messages)).toBe(true);
         expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 
-    it('should throw HttpError for invalid email', async () => {
+    it('should throw KiqError for invalid email', async () => {
       const plain = {
         name: 'John Doe',
         email: 'invalid-email',
       };
 
-      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(HttpError);
+      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(KiqError);
 
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         expect(error.messages.length).toBeGreaterThan(0);
       }
     });
 
-    it('should throw HttpError for multiple validation errors', async () => {
+    it('should throw KiqError for multiple validation errors', async () => {
       const plain = {
         name: 'Jo',
         email: 'invalid',
       };
 
-      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(HttpError);
+      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(KiqError);
 
       try {
         await transformAndValidate(TestDto, plain);
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         // Should have errors for both name and email
         expect(error.messages.length).toBeGreaterThan(1);
       }
     });
 
-    it('should throw HttpError for missing required fields', async () => {
+    it('should throw KiqError for missing required fields', async () => {
       const plain = {
         name: 'John Doe',
       };
 
-      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(HttpError);
+      await expect(transformAndValidate(TestDto, plain)).rejects.toThrow(KiqError);
     });
 
-    it('should throw HttpError for null input', async () => {
-      await expect(transformAndValidate(TestDto, null)).rejects.toThrow(HttpError);
+    it('should throw KiqError for null input', async () => {
+      await expect(transformAndValidate(TestDto, null)).rejects.toThrow(KiqError);
 
       try {
         await transformAndValidate(TestDto, null);
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error.status).toBe(400);
         expect(error.messages).toEqual(['Request body must be an object']);
       }
     });
 
-    it('should throw HttpError for undefined input', async () => {
-      await expect(transformAndValidate(TestDto, undefined)).rejects.toThrow(HttpError);
+    it('should throw KiqError for undefined input', async () => {
+      await expect(transformAndValidate(TestDto, undefined)).rejects.toThrow(KiqError);
     });
 
     it('should strip unknown properties by default', async () => {
@@ -151,10 +149,9 @@ describe('Validation', () => {
 
       try {
         await transformAndValidate(TestDto, plain);
-        fail('Should have thrown HttpError');
+        fail('Should have thrown KiqError');
       } catch (error: any) {
-        expect(error).toBeInstanceOf(HttpError);
-        expect(error.httpStatus).toBe(400);
+        expect(error.status).toBe(400);
         expect(error.messages).toBeDefined();
         expect(Array.isArray(error.messages)).toBe(true);
         expect(error.messages.length).toBeGreaterThan(0);

@@ -1,32 +1,36 @@
 import 'reflect-metadata';
-import { Container, runApplication, KiqApplication } from '@kiqjs/core';
+
+import { KiqApplication, runApplication } from '@kiqjs/core';
 import Router from '@koa/router';
+
 import Koa from 'koa';
-import { registerControllers, HttpError } from '../src/router';
+
 import {
-  RestController,
   GetMapping,
-  PostMapping,
   PathVariable,
+  PostMapping,
   RequestBody,
-  RequestParam,
   RequestHeader,
+  RequestParam,
+  RestController,
 } from '../src/decorators';
+import { BadRequest, KiqError, NotFound, ServerError, Unauthorized } from '../src/exceptions';
+import { registerControllers } from '../src/router';
 
 describe('Router', () => {
-  describe('HttpError', () => {
-    it('should create an HttpError with status and message', () => {
-      const error = new HttpError(404, 'Not Found');
-      expect(error).toBeInstanceOf(Error);
+  describe('KiqError', () => {
+    it('should create a KiqError with status and message', () => {
+      const error = NotFound('Not Found');
+      expect(error).toBeInstanceOf(KiqError);
       expect(error.status).toBe(404);
       expect(error.message).toBe('Not Found');
-      expect(error.name).toBe('HttpError');
+      expect(error.name).toBe('Error');
     });
 
     it('should create different status codes', () => {
-      const error400 = new HttpError(400, 'Bad Request');
-      const error401 = new HttpError(401, 'Unauthorized');
-      const error500 = new HttpError(500, 'Internal Server Error');
+      const error400 = BadRequest('Bad Request');
+      const error401 = Unauthorized('Unauthorized');
+      const error500 = ServerError('Internal Server Error');
 
       expect(error400.status).toBe(400);
       expect(error401.status).toBe(401);
@@ -244,7 +248,7 @@ describe('Router', () => {
 
       const route = router.stack.find((r) => r.path === '/test');
 
-      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(HttpError);
+      await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(KiqError);
       await expect(route!.stack[0](ctx, async () => {})).rejects.toThrow(
         "Query parameter 'required' is required"
       );
