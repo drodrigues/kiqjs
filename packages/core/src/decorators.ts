@@ -59,12 +59,12 @@ export function Named(name: string) {
 export const Qualifier = Named;
 
 export function Inject(token?: Token) {
-  return function (target: any, propertyKey: string | symbol, parameterIndex?: number) {
+  return function (target: any, propertyKey: string | symbol | undefined, parameterIndex?: number) {
     if (typeof parameterIndex === 'number') {
       const existing: (Token | undefined)[] = Reflect.getMetadata(META_INJECT_TOKENS, target) ?? [];
       existing[parameterIndex] = token;
       Reflect.defineMetadata(META_INJECT_TOKENS, existing, target);
-    } else {
+    } else if (propertyKey !== undefined) {
       const type = Reflect.getMetadata('design:type', target, propertyKey);
       Reflect.defineMetadata(
         META_INJECT_TOKENS,

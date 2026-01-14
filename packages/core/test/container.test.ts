@@ -112,14 +112,14 @@ describe('Container', () => {
 
     const ctx = new Container();
 
-    const http = ctx.get('httpClient');
+    const http = ctx.get('httpClient') as any;
     expect(http.get('/ping')).toBe('GET /ping');
 
     const a1 = ctx.get('auditor');
     const a2 = ctx.get('auditor');
     expect(a1).not.toBe(a2);
 
-    const wd = ctx.get('withDep');
+    const wd = ctx.get('withDep') as any;
     expect(wd.dep).toBeInstanceOf(Dep);
   });
 });

@@ -93,7 +93,7 @@ describe('decorators', () => {
 
     @Service()
     class Target {
-      constructor(@Inject(TokenA) _a: TokenA, _b: TokenB) {}
+      constructor(@Inject(TokenA) _a: TokenA, @Inject(TokenB) _b: TokenB) {}
       @Inject(TokenB) prop!: TokenB;
     }
 
