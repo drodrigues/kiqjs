@@ -6,12 +6,22 @@ import * as yaml from 'js-yaml';
 /**
  * Configuration loader for YAML files (Spring Boot style)
  *
- * Loads configuration from:
+ * Loads configuration from project root:
  * 1. application.yml (base configuration)
  * 2. application-{profile}.yml (profile-specific configuration)
  * 3. Environment variables (highest priority)
  *
+ * Files are placed in project root (same level as package.json), following
+ * Node.js conventions like .env files.
+ *
  * @example
+ * // Project structure:
+ * // my-project/
+ * //   ├── application.yml
+ * //   ├── application-production.yml
+ * //   ├── package.json
+ * //   └── src/
+ *
  * // application.yml
  * server:
  *   port: 3000
@@ -32,14 +42,14 @@ export class ConfigurationLoader {
   /**
    * Load configuration from YAML files
    *
-   * @param baseDir Directory containing configuration files (default: process.cwd()/config)
+   * @param baseDir Directory containing configuration files (default: process.cwd())
    * @param profile Active profile (default: process.env.NODE_ENV or 'development')
    */
   constructor(baseDir?: string, profile?: string) {
     const activeProfile = profile || process.env.NODE_ENV || 'development';
 
-    // Default to config directory if not specified
-    const configDir = baseDir || path.join(process.cwd(), 'config');
+    // Default to project root (like .env files in Node.js)
+    const configDir = baseDir || process.cwd();
 
     // Load base configuration (application.yml)
     this.loadConfigFile(configDir, 'application.yml');

@@ -14,8 +14,10 @@ class Application {
   async run() {
     console.log('Starting THREAD Architecture Application...\n');
 
-    // Configuration is automatically loaded from application.yml
-    // and application-{profile}.yml based on NODE_ENV
+    // Configuration is automatically loaded from:
+    // - application.yml (project root)
+    // - application-{NODE_ENV}.yml (profile-specific)
+    // Values can be injected using @Value decorator in any service
     const app = new KiqHttpApplication(Application, {
       port: 3000, // Can be overridden by application.yml or SERVER_PORT env var
       logging: true,

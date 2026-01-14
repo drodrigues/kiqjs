@@ -4,17 +4,18 @@ KiqJS Core supports Spring Boot style YAML configuration files with profile supp
 
 ## Features
 
-- 📄 **YAML Configuration Files**: Use `application.yml` for base configuration
+- 📄 **YAML Configuration Files**: Use `application.yml` in project root
 - 🎯 **Profile Support**: Environment-specific configs with `application-{profile}.yml`
 - 🔧 **Environment Variables**: Override any config with env vars
 - 💉 **@Value Decorator**: Inject configuration values into your classes
 - 🌳 **Nested Properties**: Access nested config with dot notation
+- 📁 **Node.js Convention**: Files in project root (like `.env`)
 
 ## Quick Start
 
 ### 1. Create Configuration Files
 
-Create an `application.yml` in your project root:
+Create an `application.yml` in your project root (same level as `package.json`):
 
 ```yaml
 # application.yml
@@ -34,7 +35,7 @@ features:
 
 ### 2. Profile-Specific Configuration
 
-Create profile-specific configurations:
+Create profile-specific configurations in the project root:
 
 ```yaml
 # application-production.yml
@@ -51,6 +52,16 @@ database:
 # application-development.yml
 features:
   analytics: true
+```
+
+Your project structure:
+```
+my-project/
+  ├── application.yml
+  ├── application-development.yml
+  ├── application-production.yml
+  ├── package.json
+  └── src/
 ```
 
 ### 3. Use @Value Decorator
