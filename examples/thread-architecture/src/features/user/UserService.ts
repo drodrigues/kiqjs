@@ -2,10 +2,10 @@ import { Service } from '@kiqjs/core';
 import { failure, Result, success } from '@kiqjs/http/dto';
 
 import { User, UserStatus } from '../../domains/User';
+import { UserRepository } from '../../domains/UserRepository';
 import { UserCreatedEvent } from './UserCreatedEvent';
 import { CreateUserDto, UpdateUserDto } from './UserDto';
 import { UserEventPublisher } from './UserEventPublisher';
-import { UserRepository } from './UserRepository';
 import { UserUpdatedEvent } from './UserUpdatedEvent';
 
 /**
