@@ -15,6 +15,7 @@ import {
 import { toResponse } from '@kiqjs/http/dto';
 
 import { User } from '../../domains/User';
+import { TemplateService } from './TemplateService';
 import { UserService } from './UserService';
 
 import { CreateUserDto, UpdateUserDto } from './UserDto';
@@ -26,7 +27,10 @@ import type { UserResponseDto } from './UserDto';
  */
 @RestController('/users')
 export class UserHttpController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly templateService: TemplateService
+  ) {}
 
   /**
    * GET /api/users
@@ -140,6 +144,37 @@ export class UserHttpController {
     }
 
     return { message: 'User deleted successfully' };
+  }
+
+  /**
+   * GET /api/users/:id/welcome-email
+   * Gera email de boas-vindas usando ResourceLoader (Spring Boot style)
+   * Demonstra como carregar templates da pasta resources/
+   */
+  @GetMapping('/:id/welcome-email')
+  async getWelcomeEmail(@PathVariable('id') id: string) {
+    const result = await this.userService.getUserById(id);
+
+    if (!result.success) {
+      throw NotFound(result.error);
+    }
+
+    const user = result.data;
+
+    // Use ResourceLoader to load and render template from resources/templates/
+    const emailHtml = this.templateService.renderWelcomeEmail(
+      user.name,
+      user.email,
+      user.status === 'active' ? 'Premium' : 'Standard'
+    );
+
+    return {
+      userId: user.id,
+      email: user.email,
+      subject: 'Welcome to KiqJS!',
+      html: emailHtml,
+      note: 'Template loaded from resources/templates/welcome-email.html using ResourceLoader',
+    };
   }
 
   private toResponseDto(user: User): UserResponseDto {
