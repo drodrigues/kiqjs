@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { getConfiguration } from './configuration';
 import {
   META_BEAN_METHOD,
   META_CONFIGURATION,
@@ -10,8 +11,23 @@ import {
 import { GlobalRegistry } from './registry';
 import { Newable, Provider, Scope, Token, ValueSource } from './types';
 
+/**
+ * Default value source that reads from YAML configuration files and environment variables
+ * Supports Spring Boot style configuration with profiles
+ */
 class DefaultEnvSource implements ValueSource {
   get(key: string) {
+    // Try to get from configuration (YAML + env variables)
+    try {
+      const config = getConfiguration();
+      if (config.has(key)) {
+        return config.get(key);
+      }
+    } catch {
+      // If configuration fails, fall back to environment variables only
+    }
+
+    // Fall back to environment variables
     return process.env[key];
   }
 }
