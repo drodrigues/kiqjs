@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+export { ConfigurationLoader, getConfiguration, resetConfiguration } from './configuration';
 export { Container } from './container';
 export { GlobalRegistry } from './registry';
 export {
