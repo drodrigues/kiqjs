@@ -5,3 +5,4 @@ export const META_VALUE_KEYS = Symbol('value:keys');
 export const META_POST_CONSTRUCT = Symbol('postconstruct');
 export const META_BEAN_METHOD = Symbol('bean:method');
 export const META_CONFIGURATION = Symbol('configuration');
+export const META_PROFILE = Symbol('profile');

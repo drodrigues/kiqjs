@@ -6,9 +6,11 @@ import {
   META_CONFIGURATION,
   META_INJECT_TOKENS,
   META_POST_CONSTRUCT,
+  META_PROFILE,
   META_QUALIFIERS,
   META_VALUE_KEYS,
 } from './metadata-keys';
+import { shouldActivateComponent } from './profile';
 import { GlobalRegistry } from './registry';
 import { ComponentOptions, Newable, Provider, Token } from './types';
 
@@ -22,6 +24,13 @@ export function Component(nameOrOptions?: string | ComponentOptions) {
     const options: ComponentOptions | undefined =
       typeof nameOrOptions === 'object' ? nameOrOptions : undefined;
     Reflect.defineMetadata(META_COMPONENT, options ?? {}, target);
+
+    // Check if component should be active based on @Profile
+    const profileMetadata: string | string[] | undefined = Reflect.getMetadata(META_PROFILE, target);
+    if (!shouldActivateComponent(profileMetadata)) {
+      // Component not active in current profile, skip registration
+      return;
+    }
 
     const quals: Set<string> = Reflect.getMetadata(META_QUALIFIERS, target) ?? new Set();
 
@@ -96,6 +105,13 @@ export function Configuration() {
   return function <T extends Newable>(target: T) {
     Reflect.defineMetadata(META_CONFIGURATION, true, target);
 
+    // Check if configuration should be active based on @Profile
+    const profileMetadata: string | string[] | undefined = Reflect.getMetadata(META_PROFILE, target);
+    if (!shouldActivateComponent(profileMetadata)) {
+      // Configuration not active in current profile, skip registration
+      return;
+    }
+
     GlobalRegistry.instance.register({
       token: target,
       useClass: target,
@@ -112,5 +128,52 @@ export function Bean(name?: string, scope: 'singleton' | 'prototype' = 'singleto
       Reflect.getMetadata(META_BEAN_METHOD, ctor) ?? [];
     beans.push({ method: propertyKey, name: name ?? propertyKey, scope });
     Reflect.defineMetadata(META_BEAN_METHOD, beans, ctor);
+  };
+}
+
+/**
+ * Profile decorator (Spring Boot style)
+ *
+ * Marks a component to be active only in specific profiles.
+ * The active profile is determined by:
+ * 1. spring.profiles.active in application.yml (Spring Boot compatibility)
+ * 2. NODE_ENV environment variable
+ * 3. 'development' (default)
+ *
+ * @param profiles Profile name(s) - string or array of strings
+ *                 Supports negation with '!' prefix (e.g., '!prod' = all except prod)
+ *
+ * @example
+ * // Active only in 'development' profile
+ * @Profile('development')
+ * @Service()
+ * class DevService {}
+ *
+ * @example
+ * // Active in 'development' or 'test' profiles
+ * @Profile(['development', 'test'])
+ * @Service()
+ * class LocalService {}
+ *
+ * @example
+ * // Active in all profiles except 'production'
+ * @Profile('!production')
+ * @Service()
+ * class DebugService {}
+ *
+ * @example
+ * // Configuration with profile
+ * @Profile('production')
+ * @Configuration()
+ * class ProductionConfig {
+ *   @Bean()
+ *   database() {
+ *     return new ProductionDatabase();
+ *   }
+ * }
+ */
+export function Profile(profiles: string | string[]) {
+  return function (target: any) {
+    Reflect.defineMetadata(META_PROFILE, profiles, target);
   };
 }

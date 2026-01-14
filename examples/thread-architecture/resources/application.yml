@@ -1,6 +1,13 @@
 # Application Configuration (Spring Boot style)
 # This file is loaded automatically by KiqJS
 
+# Spring Boot compatibility: Active profiles
+# Determines which @Profile components are active
+# Can be overridden by NODE_ENV environment variable
+spring:
+  profiles:
+    active: development
+
 # Server configuration
 server:
   port: 3000
