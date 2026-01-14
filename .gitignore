@@ -11,3 +11,4 @@ private
 .idea/
 .vscode
 __tmp_scan__
+examples/thread-architecture/dist/
