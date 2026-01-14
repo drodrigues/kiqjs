@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@kiqjs/core": "workspace:*",
-    "@kiqjs/http": "workspace:*"
+    "@kiqjs/http": "workspace:*",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@types/node": "^24.6.1",
