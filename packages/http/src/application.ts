@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { Container, runApplication } from '@kiqjs/core';
+import { Container, getConfiguration, runApplication } from '@kiqjs/core';
 import Router from '@koa/router';
 
 import Koa from 'koa';
@@ -14,9 +14,14 @@ export const logger = pino();
 
 export interface KiqHttpApplicationOptions {
   /**
-   * Port to listen on (default: 3000)
+   * Port to listen on (default: reads from server.port in YAML or 3000)
    */
   port?: number;
+
+  /**
+   * Host to bind to (default: reads from server.host in YAML or 'localhost')
+   */
+  host?: string;
 
   /**
    * Enable body parser middleware (default: true)
@@ -44,15 +49,16 @@ export interface KiqHttpApplicationOptions {
   middlewares?: Koa.Middleware[];
 
   /**
-   * Router prefix (e.g., '/api/v1')
+   * Router prefix (default: reads from server.prefix in YAML or empty)
    */
   prefix?: string;
 }
 
 /**
- * KiqHttpApplication - Spring Boot-like application class for HTTP server.
+ * KiqHttpApplication - HTTP application class with automatic configuration.
  *
  * Integrates KiqJS dependency injection with Koa HTTP server.
+ * Automatically reads server configuration (port, host, prefix) from YAML.
  *
  * @example
  * ```typescript
@@ -60,7 +66,7 @@ export interface KiqHttpApplicationOptions {
  * class MyApp {
  *   async run() {
  *     const app = new KiqHttpApplication(MyApp);
- *     await app.start(3000);
+ *     await app.start(); // Reads from resources/application.yml
  *   }
  * }
  * ```
@@ -75,14 +81,28 @@ export class KiqHttpApplication {
     this.app = new Koa();
     this.router = new Router();
 
+    // Try to read server config from YAML
+    let serverConfig: { port?: number; host?: string; prefix?: string } = {};
+    try {
+      const config = getConfiguration();
+      serverConfig = {
+        port: config.get<number>('server.port'),
+        host: config.get<string>('server.host'),
+        prefix: config.get<string>('server.prefix'),
+      };
+    } catch {
+      // Configuration not loaded yet, will use defaults
+    }
+
     this.options = {
-      port: options.port ?? 3000,
+      port: options.port ?? serverConfig.port ?? 3000,
+      host: options.host ?? serverConfig.host ?? 'localhost',
       bodyParser: options.bodyParser ?? true,
       bodyParserOptions: options.bodyParserOptions ?? {},
       errorHandler: options.errorHandler ?? true,
       logging: options.logging ?? true,
       middlewares: options.middlewares ?? [],
-      prefix: options.prefix ?? '',
+      prefix: options.prefix ?? serverConfig.prefix ?? '',
     };
 
     if (this.options.prefix) {
@@ -94,9 +114,11 @@ export class KiqHttpApplication {
    * Starts the Koa application.
    *
    * @param port Port to listen on (overrides constructor option)
+   * @param host Host to bind to (overrides constructor option)
    */
-  async start(port?: number): Promise<void> {
+  async start(port?: number, host?: string): Promise<void> {
     const listenPort = port ?? this.options.port;
+    const listenHost = host ?? this.options.host;
 
     // Initialize KiqJS container
     this.container = await runApplication(this.appClass);
@@ -113,9 +135,9 @@ export class KiqHttpApplication {
 
     // Start server
     return new Promise((resolve) => {
-      this.app.listen(listenPort, () => {
+      this.app.listen(listenPort, listenHost, () => {
         console.log(`\nServer started`);
-        console.log(`Listening on http://localhost:${listenPort}${this.options.prefix}`);
+        console.log(`Listening on http://${listenHost}:${listenPort}${this.options.prefix}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}\n\n`);
         resolve();
       });

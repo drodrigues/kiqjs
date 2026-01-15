@@ -1,5 +1,9 @@
 import { Bean, Configuration, Value } from '@kiqjs/core';
 
+/**
+ * Application-specific configuration
+ * Server configuration (port, host, prefix) is handled automatically by @kiqjs/http
+ */
 @Configuration()
 export class AppConfig {
   @Value('app.name')
@@ -7,15 +11,6 @@ export class AppConfig {
 
   @Value('app.version')
   appVersion!: string;
-
-  @Value('server.port')
-  serverPort!: number;
-
-  @Value('server.host')
-  serverHost!: string;
-
-  @Value('server.prefix')
-  serverPrefix!: string;
 
   @Value('features.userManagement.enabled')
   userManagementEnabled!: boolean;
@@ -32,15 +27,6 @@ export class AppConfig {
       name: this.appName,
       version: this.appVersion,
       env: process.env.NODE_ENV || 'development',
-    };
-  }
-
-  @Bean()
-  serverConfig() {
-    return {
-      port: this.serverPort,
-      host: this.serverHost,
-      prefix: this.serverPrefix,
     };
   }
 
