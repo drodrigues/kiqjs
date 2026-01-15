@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 
-import { IsEmail, IsOptional, IsString, MinLength } from '../src/dto';
+import { IsEmail, IsOptional, IsString, MinLength, IsNumber } from '../src/dto';
 import { KiqError } from '../src/exceptions';
-import { transformAndValidate } from '../src/validation';
+import { transformAndValidate, DEFAULT_VALIDATOR_OPTIONS } from '../src/validation';
 
 class TestDto {
   @IsString()
@@ -156,6 +156,145 @@ describe('Validation', () => {
         expect(Array.isArray(error.messages)).toBe(true);
         expect(error.messages.length).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe('Configuration from YAML', () => {
+    // Mock the configuration module
+    let originalRequire: any;
+    let mockConfig: any;
+
+    beforeEach(() => {
+      // Reset module cache to allow re-importing with different config
+      jest.resetModules();
+
+      // Create mock configuration
+      mockConfig = {
+        has: jest.fn(),
+        getObject: jest.fn(),
+      };
+
+      // Mock require to return our mock configuration
+      originalRequire = require;
+      jest.mock('@kiqjs/core', () => ({
+        getConfiguration: jest.fn(() => mockConfig),
+      }));
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+      jest.resetModules();
+    });
+
+    it('should use default options when no YAML configuration exists', async () => {
+      mockConfig.has.mockReturnValue(false);
+
+      const plain = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        unknownField: 'should be removed',
+      };
+
+      const result = await transformAndValidate(TestDto, plain);
+
+      // Default behavior: whitelist=true, so unknown fields are stripped
+      expect((result as any).unknownField).toBeUndefined();
+    });
+
+    it('should merge YAML configuration with defaults', async () => {
+      // This test validates that the configuration loading mechanism works
+      // In practice, the YAML config would be loaded by ConfigurationLoader
+      mockConfig.has.mockReturnValue(true);
+      mockConfig.getObject.mockReturnValue({
+        whitelist: true,
+        forbidNonWhitelisted: false,
+      });
+
+      const plain = {
+        name: 'John Doe',
+        email: 'john@example.com',
+      };
+
+      const result = await transformAndValidate(TestDto, plain);
+
+      expect(result).toBeInstanceOf(TestDto);
+      expect(result.name).toBe('John Doe');
+    });
+
+    it('should allow programmatic options to override YAML configuration', async () => {
+      mockConfig.has.mockReturnValue(true);
+      mockConfig.getObject.mockReturnValue({
+        whitelist: false, // From YAML
+      });
+
+      const plain = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        unknownField: 'test',
+      };
+
+      // Override with programmatic option: whitelist=true
+      const result = await transformAndValidate(TestDto, plain, {
+        whitelist: true,
+      });
+
+      // Programmatic option takes precedence, so unknown field is stripped
+      expect((result as any).unknownField).toBeUndefined();
+    });
+  });
+
+  describe('Configuration Priority', () => {
+    class StrictDto {
+      @IsString()
+      @MinLength(3)
+      name!: string;
+
+      @IsNumber()
+      age!: number;
+    }
+
+    it('should apply default options when no other config provided', async () => {
+      const plain = {
+        name: 'John',
+        age: 25,
+        extra: 'field',
+      };
+
+      const result = await transformAndValidate(StrictDto, plain);
+
+      // Default: whitelist=true strips extra fields
+      expect((result as any).extra).toBeUndefined();
+    });
+
+    it('should allow custom options to override defaults', async () => {
+      const plain = {
+        name: 'John',
+        age: 25,
+        extra: 'field',
+      };
+
+      const result = await transformAndValidate(StrictDto, plain, {
+        whitelist: false, // Allow extra fields
+      });
+
+      // With whitelist=false, extra fields are preserved
+      expect((result as any).extra).toBe('field');
+    });
+
+    it('should validate forbidNonWhitelisted option', async () => {
+      const plain = {
+        name: 'John',
+        age: 25,
+        extra: 'field',
+      };
+
+      // With forbidNonWhitelisted=true, should throw error for extra fields
+      await expect(
+        transformAndValidate(StrictDto, plain, {
+          whitelist: true,
+          forbidNonWhitelisted: true,
+        })
+      ).rejects.toThrow(KiqError);
     });
   });
 });

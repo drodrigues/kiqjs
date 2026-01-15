@@ -8,6 +8,17 @@ kiqjs:
   profiles:
     active: development
 
+  # Validator configuration (class-validator options)
+  # These options are used by @RequestBody decorator and transformAndValidate function
+  validator:
+    skipMissingProperties: false
+    whitelist: true
+    forbidNonWhitelisted: false
+    forbidUnknownValues: false
+    validationError:
+      target: false
+      value: false
+
 # Server configuration
 server:
   port: 3000

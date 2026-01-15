@@ -19,17 +19,88 @@ export const DEFAULT_VALIDATOR_OPTIONS: ValidatorOptions = {
 };
 
 /**
+ * Lazy-loaded configuration to avoid circular dependencies
+ */
+let cachedConfigOptions: ValidatorOptions | null = null;
+let configInitialized = false;
+
+/**
+ * Load validator options from application configuration (application.yml)
+ *
+ * Reads configuration from kiqjs.validator key in application.yml
+ *
+ * @example
+ * # application.yml
+ * kiqjs:
+ *   validator:
+ *     skipMissingProperties: false
+ *     whitelist: true
+ *     forbidNonWhitelisted: false
+ *     validationError:
+ *       target: false
+ *       value: false
+ *
+ * @returns ValidatorOptions from configuration or empty object if not configured
+ */
+function loadValidatorOptionsFromConfig(): ValidatorOptions {
+  if (configInitialized) {
+    return cachedConfigOptions || {};
+  }
+
+  configInitialized = true;
+
+  try {
+    // Lazy load to avoid circular dependencies
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getConfiguration } = require('@kiqjs/core');
+    const config = getConfiguration();
+
+    if (config.has('kiqjs.validator')) {
+      const validatorConfig = config.getObject('kiqjs.validator');
+      cachedConfigOptions = validatorConfig;
+      return validatorConfig;
+    }
+  } catch (error) {
+    // @kiqjs/core not available or no configuration found
+    // This is fine - validator works standalone without configuration
+  }
+
+  return {};
+}
+
+/**
+ * Get merged validator options
+ * Priority (highest to lowest):
+ * 1. Options passed programmatically
+ * 2. Options from application.yml (kiqjs.validator)
+ * 3. DEFAULT_VALIDATOR_OPTIONS
+ *
+ * @param options Optional validator options passed programmatically
+ * @returns Merged validator options
+ */
+function getMergedValidatorOptions(options?: ValidatorOptions): ValidatorOptions {
+  const configOptions = loadValidatorOptionsFromConfig();
+
+  return {
+    ...DEFAULT_VALIDATOR_OPTIONS,
+    ...configOptions,
+    ...options,
+  };
+}
+
+/**
  * Validates a DTO instance using class-validator
  *
  * @param dtoInstance The DTO instance to validate
- * @param options Validator options
+ * @param options Validator options (optional, merges with config and defaults)
  * @throws HttpError with code 400 if validation fails
  */
 export async function validateDto(
   dtoInstance: object,
-  options: ValidatorOptions = DEFAULT_VALIDATOR_OPTIONS
+  options?: ValidatorOptions
 ): Promise<void> {
-  const errors = await validate(dtoInstance, options);
+  const mergedOptions = getMergedValidatorOptions(options);
+  const errors = await validate(dtoInstance, mergedOptions);
 
   if (errors.length > 0) {
     const messages = formatValidationErrors(errors);
@@ -42,14 +113,14 @@ export async function validateDto(
  *
  * @param dtoClass The DTO class constructor
  * @param plain Plain object to transform and validate
- * @param options Validator options
+ * @param options Validator options (optional, merges with config and defaults)
  * @returns Validated DTO instance
  * @throws HttpError with code 400 if validation fails
  */
 export async function transformAndValidate<T extends object>(
   dtoClass: new () => T,
   plain: any,
-  options: ValidatorOptions = DEFAULT_VALIDATOR_OPTIONS
+  options?: ValidatorOptions
 ): Promise<T> {
   if (!plain || typeof plain !== 'object') {
     throw BadRequest('Request body must be an object');

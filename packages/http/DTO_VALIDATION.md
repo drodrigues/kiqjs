@@ -266,20 +266,94 @@ createUser(@RequestBody() @Valid() user: CreateUserDto) {
 
 ## Advanced Configuration
 
-You can customize validation options:
+### Configuration via application.yml (Recommended - Spring Boot Style)
+
+You can configure validator options globally in your `application.yml` file under the `kiqjs.validator` key:
+
+```yaml
+# resources/application.yml
+kiqjs:
+  validator:
+    skipMissingProperties: false
+    whitelist: true
+    forbidNonWhitelisted: false
+    forbidUnknownValues: false
+    validationError:
+      target: false
+      value: false
+```
+
+This configuration will be automatically loaded and applied to all validation operations. All `class-validator` options are supported.
+
+#### Available Options
+
+- `skipMissingProperties` (boolean): Skip validation of properties that are missing in the object
+- `whitelist` (boolean): Strip properties that do not have any decorators
+- `forbidNonWhitelisted` (boolean): Throw error if non-whitelisted properties are present
+- `forbidUnknownValues` (boolean): Fail validation when validating unknown objects
+- `validationError.target` (boolean): Include the validated object in error response
+- `validationError.value` (boolean): Include the invalid value in error response
+
+### Programmatic Configuration
+
+You can also customize validation options programmatically. Programmatic options take precedence over YAML configuration:
 
 ```typescript
 import { transformAndValidate, DEFAULT_VALIDATOR_OPTIONS } from '@kiqjs/http';
 
-// Custom options
+// Custom options (overrides YAML configuration)
 const customOptions = {
-  ...DEFAULT_VALIDATOR_OPTIONS,
   skipMissingProperties: false,
   whitelist: true,
-  forbidNonWhitelisted: false,
+  forbidNonWhitelisted: true, // More strict than YAML config
 };
 
 const validated = await transformAndValidate(CreateUserDto, data, customOptions);
+```
+
+### Configuration Priority
+
+The validator options are merged with the following priority (highest to lowest):
+
+1. **Programmatic options** - Options passed directly to `transformAndValidate()`
+2. **YAML configuration** - Options from `application.yml` (`kiqjs.validator`)
+3. **Default options** - Built-in defaults from `DEFAULT_VALIDATOR_OPTIONS`
+
+#### Example with Priority
+
+```yaml
+# application.yml
+kiqjs:
+  validator:
+    whitelist: true
+    forbidNonWhitelisted: false
+```
+
+```typescript
+// This will use whitelist: true (from YAML), forbidNonWhitelisted: true (from code)
+const validated = await transformAndValidate(CreateUserDto, data, {
+  forbidNonWhitelisted: true, // Overrides YAML
+});
+```
+
+### Profile-Specific Configuration
+
+You can have different validator configurations per environment using profiles:
+
+```yaml
+# resources/application-development.yml
+kiqjs:
+  validator:
+    forbidNonWhitelisted: false # Lenient for development
+    skipMissingProperties: true
+```
+
+```yaml
+# resources/application-production.yml
+kiqjs:
+  validator:
+    forbidNonWhitelisted: true # Strict in production
+    skipMissingProperties: false
 ```
 
 ## See Also
