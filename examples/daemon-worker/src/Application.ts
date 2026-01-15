@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Component, Inject, runApplication } from '@kiqjs/core';
+import { Container, runApplication } from '@kiqjs/core';
 import { LoggerService } from './services/LoggerService';
 import { WorkerService } from './services/WorkerService';
 import { AppConfiguration } from './config/AppConfiguration';
@@ -13,34 +13,41 @@ import { AppConfiguration } from './config/AppConfiguration';
  * - Task processing with configurable intervals
  * - Proper cleanup before exit
  */
-@Component()
-class DaemonWorkerApplication {
-  @Inject()
+class Application {
+  private container!: Container;
   private logger!: LoggerService;
-
-  @Inject()
   private worker!: WorkerService;
-
-  @Inject()
   private config!: AppConfiguration;
-
   private isShuttingDown = false;
 
   async run(): Promise<void> {
-    // Print application info
-    console.log('\n' + '='.repeat(70));
-    console.log(this.config.getAppInfo());
-    console.log('='.repeat(70) + '\n');
+    try {
+      // Initialize KiqJS container (scans and registers all components)
+      this.container = await runApplication(Application);
 
-    // Setup graceful shutdown handlers
-    this.setupShutdownHandlers();
+      // Resolve dependencies from container
+      this.logger = this.container.get(LoggerService);
+      this.worker = this.container.get(WorkerService);
+      this.config = this.container.get(AppConfiguration);
 
-    // Start the worker (runs indefinitely until stopped)
-    this.logger.info('Starting worker daemon...');
-    await this.worker.start();
+      // Print application info
+      console.log('\n' + '='.repeat(70));
+      console.log(this.config.getAppInfo());
+      console.log('='.repeat(70) + '\n');
 
-    // This line is only reached after worker.stop() is called
-    this.logger.info('Worker daemon stopped');
+      // Setup graceful shutdown handlers
+      this.setupShutdownHandlers();
+
+      // Start the worker (runs indefinitely until stopped)
+      this.logger.info('Starting worker daemon...');
+      await this.worker.start();
+
+      // This line is only reached after worker.stop() is called
+      this.logger.info('Worker daemon stopped');
+    } catch (error) {
+      console.error('Failed to start application:', error);
+      process.exit(1);
+    }
   }
 
   /**
@@ -115,16 +122,5 @@ class DaemonWorkerApplication {
   }
 }
 
-// Bootstrap the application
-async function bootstrap() {
-  try {
-    const container = await runApplication(DaemonWorkerApplication);
-    const app = container.get(DaemonWorkerApplication);
-    await app.run();
-  } catch (error) {
-    console.error('Failed to start application:', error);
-    process.exit(1);
-  }
-}
-
-bootstrap();
+// Bootstrap the application (same pattern as HTTP examples)
+new Application().run().catch(console.error);
