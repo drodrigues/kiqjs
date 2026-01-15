@@ -3,31 +3,52 @@ import { getConfiguration } from './configuration';
 /**
  * Get the active profile(s)
  *
- * Priority:
- * 1. kiq.profiles.active from application.yml
- * 2. NODE_ENV environment variable
- * 3. 'development' (default)
+ * Priority (highest to lowest):
+ * 1. KIQ_PROFILES environment variable (comma-separated)
+ * 2. kiq.profiles.active from application.yml
+ * 3. NODE_ENV environment variable
+ * 4. 'development' (default)
  *
- * Supports comma-separated profiles: "dev,local"
+ * Supports comma-separated profiles: "dev,local,debug"
  *
  * @returns Array of active profiles
+ *
+ * @example
+ * // Using environment variable (highest priority)
+ * // KIQ_PROFILES=production,monitoring node app.js
+ * getActiveProfiles() // ['production', 'monitoring']
+ *
+ * @example
+ * // Using YAML configuration
+ * // kiq.profiles.active: development,debug
+ * getActiveProfiles() // ['development', 'debug']
  */
 export function getActiveProfiles(): string[] {
+  // 1. Check KIQ_PROFILES environment variable (highest priority)
+  const kiqProfilesEnv = process.env.KIQ_PROFILES;
+  if (kiqProfilesEnv) {
+    return kiqProfilesEnv.split(',').map((p) => p.trim()).filter(Boolean);
+  }
+
+  // 2. Check kiq.profiles.active from YAML
   try {
     const config = getConfiguration();
-
-    // Check kiq.profiles.active
     if (config.has('kiq.profiles.active')) {
       const profiles = config.get<string>('kiq.profiles.active');
-      return profiles.split(',').map((p) => p.trim());
+      return profiles.split(',').map((p) => p.trim()).filter(Boolean);
     }
   } catch {
     // Configuration not loaded yet, fallback to environment
   }
 
-  // Fallback to NODE_ENV
-  const nodeEnv = process.env.NODE_ENV || 'development';
-  return [nodeEnv];
+  // 3. Fallback to NODE_ENV
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv) {
+    return [nodeEnv.trim()];
+  }
+
+  // 4. Default
+  return ['development'];
 }
 
 /**

@@ -5,6 +5,7 @@ import * as path from 'path';
 
 describe('Profile', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  const originalKiqProfiles = process.env.KIQ_PROFILES;
   const testResourcesDir = path.join(__dirname, 'test-profile-resources');
 
   beforeEach(() => {
@@ -21,11 +22,17 @@ describe('Profile', () => {
   });
 
   afterEach(() => {
-    // Restore original NODE_ENV
+    // Restore original environment variables
     if (originalNodeEnv) {
       process.env.NODE_ENV = originalNodeEnv;
     } else {
       delete process.env.NODE_ENV;
+    }
+
+    if (originalKiqProfiles) {
+      process.env.KIQ_PROFILES = originalKiqProfiles;
+    } else {
+      delete process.env.KIQ_PROFILES;
     }
 
     // Reset configuration
@@ -40,17 +47,48 @@ describe('Profile', () => {
   describe('getActiveProfiles', () => {
     it('should return default profile when no config or env', () => {
       delete process.env.NODE_ENV;
+      delete process.env.KIQ_PROFILES;
       const profiles = getActiveProfiles();
       expect(profiles).toEqual(['development']);
     });
 
     it('should return NODE_ENV as profile', () => {
+      delete process.env.KIQ_PROFILES;
       process.env.NODE_ENV = 'production';
       const profiles = getActiveProfiles();
       expect(profiles).toEqual(['production']);
     });
 
+    it('should use KIQ_PROFILES environment variable (highest priority)', () => {
+      process.env.KIQ_PROFILES = 'production,monitoring';
+      process.env.NODE_ENV = 'development';
+
+      const profiles = getActiveProfiles();
+      expect(profiles).toEqual(['production', 'monitoring']);
+    });
+
+    it('should support single profile in KIQ_PROFILES', () => {
+      process.env.KIQ_PROFILES = 'staging';
+      const profiles = getActiveProfiles();
+      expect(profiles).toEqual(['staging']);
+    });
+
+    it('should handle whitespace in KIQ_PROFILES', () => {
+      process.env.KIQ_PROFILES = ' production , monitoring , debug ';
+      const profiles = getActiveProfiles();
+      expect(profiles).toEqual(['production', 'monitoring', 'debug']);
+    });
+
+    it('should filter empty strings in KIQ_PROFILES', () => {
+      process.env.KIQ_PROFILES = 'production,,monitoring,';
+      const profiles = getActiveProfiles();
+      expect(profiles).toEqual(['production', 'monitoring']);
+    });
+
     it('should read from kiq.profiles.active in YAML config', () => {
+      delete process.env.KIQ_PROFILES;
+      delete process.env.NODE_ENV;
+
       // Create application.yml with kiq.profiles.active
       const yamlContent = 'kiq:\n  profiles:\n    active: production';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
@@ -72,6 +110,9 @@ describe('Profile', () => {
     });
 
     it('should support comma-separated profiles', () => {
+      delete process.env.KIQ_PROFILES;
+      delete process.env.NODE_ENV;
+
       // Create application.yml with multiple profiles
       const yamlContent = 'kiq:\n  profiles:\n    active: dev,local,debug';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
@@ -90,7 +131,30 @@ describe('Profile', () => {
       }
     });
 
+    it('should prioritize KIQ_PROFILES over kiq.profiles.active', () => {
+      process.env.KIQ_PROFILES = 'staging,debug';
+      process.env.NODE_ENV = 'test';
+
+      const yamlContent = 'kiq:\n  profiles:\n    active: production';
+      fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
+
+      const originalCwd = process.cwd();
+      process.chdir(testResourcesDir);
+
+      try {
+        resetConfiguration();
+        getConfiguration();
+
+        const profiles = getActiveProfiles();
+        // KIQ_PROFILES has highest priority
+        expect(profiles).toEqual(['staging', 'debug']);
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
     it('should prioritize kiq.profiles.active over NODE_ENV', () => {
+      delete process.env.KIQ_PROFILES;
       process.env.NODE_ENV = 'test';
 
       const yamlContent = 'kiq:\n  profiles:\n    active: production';
@@ -111,11 +175,23 @@ describe('Profile', () => {
     });
 
     it('should fallback to NODE_ENV when YAML config not available', () => {
+      delete process.env.KIQ_PROFILES;
       process.env.NODE_ENV = 'staging';
 
       // No YAML file created
       const profiles = getActiveProfiles();
       expect(profiles).toEqual(['staging']);
+    });
+
+    it('should work with KIQ_PROFILES and isProfileActive', () => {
+      process.env.KIQ_PROFILES = 'production,monitoring,debug';
+
+      expect(isProfileActive('production')).toBe(true);
+      expect(isProfileActive('monitoring')).toBe(true);
+      expect(isProfileActive('debug')).toBe(true);
+      expect(isProfileActive('development')).toBe(false);
+      expect(isProfileActive(['production', 'staging'])).toBe(true);
+      expect(isProfileActive('!development')).toBe(true);
     });
   });
 
