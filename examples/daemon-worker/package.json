@@ -1,0 +1,22 @@
+{
+  "name": "daemon-worker-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daemon worker example with graceful shutdown - Demonstrates long-running processes with KiqJS",
+  "main": "src/Application.ts",
+  "scripts": {
+    "dev": "ts-node src/Application.ts",
+    "dev:prod": "NODE_ENV=production ts-node src/Application.ts",
+    "start": "node dist/Application.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@kiqjs/core": "workspace:*",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

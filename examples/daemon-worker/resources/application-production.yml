@@ -1,0 +1,8 @@
+worker:
+  intervalMs: 5000
+  batchSize: 10
+  taskDurationMs: 1000
+
+logger:
+  level: "warn"
+  format: "json"

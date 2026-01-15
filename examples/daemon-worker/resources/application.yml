@@ -1,0 +1,25 @@
+kiq:
+  profiles:
+    active: development
+
+app:
+  name: "KiqJS Daemon Worker"
+  version: "1.0.0"
+  description: "Long-running worker with graceful shutdown"
+
+worker:
+  # Interval between task processing (milliseconds)
+  intervalMs: 3000
+
+  # Maximum number of tasks to process per cycle
+  batchSize: 5
+
+  # Simulated task processing time (milliseconds)
+  taskDurationMs: 500
+
+  # Graceful shutdown timeout (milliseconds)
+  shutdownTimeoutMs: 10000
+
+logger:
+  level: "info"
+  format: "pretty"
