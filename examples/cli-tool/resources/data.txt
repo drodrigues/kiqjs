@@ -1,0 +1,6 @@
+This is sample data for the CLI tool
+Line 1: Hello from KiqJS
+Line 2: Dependency Injection rocks!
+Line 3: Configuration management made easy
+Line 4: Profile-based activation
+Line 5: Resource loading from classpath

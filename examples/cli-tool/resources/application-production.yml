@@ -1,0 +1,7 @@
+logger:
+  level: "warn"
+  format: "json"
+
+processor:
+  batchSize: 50
+  timeout: 3000

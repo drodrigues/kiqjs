@@ -1,0 +1,7 @@
+logger:
+  level: "debug"
+  format: "pretty"
+
+processor:
+  batchSize: 5
+  timeout: 10000

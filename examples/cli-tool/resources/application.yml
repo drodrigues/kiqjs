@@ -1,0 +1,13 @@
+app:
+  name: "KiqJS CLI Tool"
+  version: "1.0.0"
+  description: "Example CLI tool demonstrating KiqJS Core features"
+
+processor:
+  batchSize: 10
+  timeout: 5000
+  enabled: true
+
+logger:
+  level: "info"
+  format: "json"

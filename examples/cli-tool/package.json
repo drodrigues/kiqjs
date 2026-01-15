@@ -1,0 +1,23 @@
+{
+  "name": "cli-tool-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CLI tool example using KiqJS Core - Demonstrates dependency injection, configuration, and profiles without HTTP",
+  "main": "src/Application.ts",
+  "scripts": {
+    "dev": "ts-node src/Application.ts",
+    "dev:prod": "KIQJS_PROFILES_ACTIVE=production ts-node src/Application.ts",
+    "dev:debug": "KIQJS_PROFILES_ACTIVE=development,debug ts-node src/Application.ts",
+    "start": "node dist/Application.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@kiqjs/core": "workspace:*",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
