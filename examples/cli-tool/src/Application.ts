@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container, scanAndRegister } from '@kiqjs/core';
+import { Component, Container, Inject, runApplication } from '@kiqjs/core';
 import { LoggerService } from './services/LoggerService';
 import { DataProcessorService } from './services/DataProcessorService';
 import { FileReaderComponent } from './components/FileReaderComponent';
@@ -8,20 +8,28 @@ import { AppConfiguration } from './config/AppConfiguration';
 
 /**
  * Main CLI application demonstrating KiqJS Core features:
- * - Dependency Injection with Container
+ * - Dependency Injection with @Component and @Inject
  * - Configuration management with @Value
  * - Profile-based component activation with @Profile
  * - Resource loading with ResourceLoader
  * - Service and Component organization
  */
+@Component()
 class CliToolApplication {
-  constructor(
-    private logger: LoggerService,
-    private processor: DataProcessorService,
-    private fileReader: FileReaderComponent,
-    private config: AppConfiguration,
-    private debugComponent?: DebugComponent
-  ) {}
+  @Inject()
+  private logger!: LoggerService;
+
+  @Inject()
+  private processor!: DataProcessorService;
+
+  @Inject()
+  private fileReader!: FileReaderComponent;
+
+  @Inject()
+  private config!: AppConfiguration;
+
+  @Inject()
+  private container!: Container;
 
   async run(): Promise<void> {
     try {
@@ -32,11 +40,15 @@ class CliToolApplication {
 
       this.logger.info('Application started');
 
-      // If debug profile is active, print debug info
-      if (this.debugComponent) {
-        this.debugComponent.printDebugInfo({
+      // If debug profile is active, DebugComponent will be registered
+      // Try to get it from container (optional)
+      try {
+        const debugComponent = this.container.get(DebugComponent);
+        debugComponent.printDebugInfo({
           processorConfig: this.processor.getConfiguration()
         });
+      } catch {
+        // DebugComponent not registered (debug profile not active)
       }
 
       // List available resources
@@ -74,32 +86,21 @@ class CliToolApplication {
 
 // Bootstrap the application
 async function bootstrap() {
-  // Scan and register all components
-  await scanAndRegister(__dirname);
-
-  // Create container
-  const container = new Container();
-
-  // Resolve services from container
-  const logger = container.get(LoggerService);
-  const processor = container.get(DataProcessorService);
-  const fileReader = container.get(FileReaderComponent);
-  const config = container.get(AppConfiguration);
-
-  // DebugComponent is optional - only available when 'debug' profile is active
-  let debugComponent: DebugComponent | undefined;
   try {
-    debugComponent = container.get(DebugComponent);
-  } catch (e) {
-    // DebugComponent not registered (debug profile not active)
-  }
+    // runApplication() automatically:
+    // - Scans and registers all components
+    // - Creates the container
+    // - Resolves dependencies
+    // - Returns the container
+    const container = await runApplication(CliToolApplication);
 
-  // Create and run application
-  const app = new CliToolApplication(logger, processor, fileReader, config, debugComponent);
-  await app.run();
+    // Get the application instance and run it
+    const app = container.get(CliToolApplication);
+    await app.run();
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
 }
 
-bootstrap().catch(error => {
-  console.error('Failed to start application:', error);
-  process.exit(1);
-});
+bootstrap();

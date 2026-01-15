@@ -1,4 +1,4 @@
-import { Component, Profile, Inject } from '@kiqjs/core';
+import { Component, Profile, Inject, getActiveProfiles } from '@kiqjs/core';
 import { LoggerService } from '../services/LoggerService';
 
 /**
@@ -24,7 +24,7 @@ export class DebugComponent {
       uptime: process.uptime()
     });
     this.logger.debug('Environment:', {
-      activeProfiles: process.env.KIQJS_PROFILES_ACTIVE || 'default'
+      activeProfiles: getActiveProfiles().join(', ')
     });
     this.logger.debug('='.repeat(60));
   }

@@ -1,3 +1,7 @@
+kiq:
+  profiles:
+    active: development,debug
+
 app:
   name: "KiqJS CLI Tool"
   version: "1.0.0"
