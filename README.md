@@ -148,44 +148,27 @@ export class TaskService {
 
 // src/Application.ts
 import 'reflect-metadata';
-import { Component, Container, Inject, runApplication } from '@kiqjs/core';
+import { Container, runApplication } from '@kiqjs/core';
 import { TaskService } from './services/TaskService';
 
-@Component()
 class Application {
-  @Inject()
-  private taskService!: TaskService;
-
-  @Inject()
   private container!: Container;
 
   async run() {
+    // Initialize KiqJS container (scans and registers all components)
+    this.container = await runApplication(Application);
+
+    // Resolve dependencies from container
+    const taskService = this.container.get(TaskService);
+
     // Run your tasks
-    await this.taskService.processTask({ id: 1, name: 'Example' });
+    await taskService.processTask({ id: 1, name: 'Example' });
     console.log('Application completed!');
   }
 }
 
-// Bootstrap the application
-async function bootstrap() {
-  try {
-    // runApplication() automatically:
-    // - Scans and registers all components
-    // - Creates the container
-    // - Resolves dependencies
-    // - Returns the container
-    const container = await runApplication(Application);
-
-    // Get the application instance and run it
-    const app = container.get(Application);
-    await app.run();
-  } catch (error) {
-    console.error('Failed to start application:', error);
-    process.exit(1);
-  }
-}
-
-bootstrap();
+// Bootstrap the application (simple one-liner)
+new Application().run().catch(console.error);
 ```
 
 **Configuration (resources/application.yml):**
@@ -205,16 +188,24 @@ ts-node src/Application.ts
 ```
 
 **Key Points:**
-- Use `@Component()` decorator on your main application class
-- Use `@Inject()` to inject dependencies (including the `Container` itself)
-- `runApplication()` handles all the bootstrapping automatically
-- Access the Container to dynamically resolve optional dependencies
+- Simple bootstrap: `new Application().run().catch(console.error)`
+- `runApplication()` scans and registers all components automatically
+- Resolve dependencies with `container.get(ServiceName)`
+- No decorators needed on Application class
 
-See [examples/cli-tool](./examples/cli-tool) for a complete example with:
-- Configuration management with `@Value`
-- Profile-based components with `@Profile`
-- Resource loading with `ResourceLoader`
-- Logging and data processing services
+**Examples:**
+
+1. **CLI Tool** - [examples/cli-tool](./examples/cli-tool)
+   - Configuration management with `@Value`
+   - Profile-based components with `@Profile`
+   - Resource loading with `ResourceLoader`
+   - Logging and data processing services
+
+2. **Daemon Worker** - [examples/daemon-worker](./examples/daemon-worker)
+   - Long-running process with infinite loop
+   - Graceful shutdown on SIGTERM/SIGINT
+   - Batch task processing
+   - Perfect for background jobs, message queue consumers
 
 ### Using @kiqjs/http (Web Applications)
 
@@ -242,13 +233,14 @@ my-project/
 ### 2. Configuration (resources/application.yml)
 
 ```yaml
-kiqjs:
+kiq:
   profiles:
     active: development
 
 server:
   port: 3000
   host: localhost
+  prefix: /api
 
 app:
   name: My Application
@@ -299,14 +291,12 @@ export class UserController {
 ```typescript
 // src/Application.ts
 import 'reflect-metadata';
-import { Component } from '@kiqjs/core';
 import { KiqHttpApplication } from '@kiqjs/http';
 
-@Component()
 class Application {
   async run() {
+    // Server config (port, host, prefix) is loaded automatically from YAML
     const app = new KiqHttpApplication(Application, {
-      port: 3000,       // or load from YAML with server.port
       logging: true,
       errorHandler: true,
       bodyParser: true,
@@ -335,12 +325,14 @@ KiqJS uses YAML configuration with profile support:
 
 ```yaml
 # resources/application.yml
-kiqjs:
+kiq:
   profiles:
     active: development
 
 server:
   port: 3000
+  host: localhost
+  prefix: /api
 
 app:
   name: My App
@@ -399,7 +391,7 @@ export class DebugService {}
 
 ```yaml
 # resources/application.yml
-kiqjs:
+kiq:
   profiles:
     active: production
 ```
@@ -531,23 +523,38 @@ export class UserRepository {
 
 ### CLI Tool Example
 
-Check [examples/cli-tool](./examples/cli-tool) for a complete CLI application using @kiqjs/core:
+Check [examples/cli-tool](./examples/cli-tool) for a complete CLI application:
 
-- **Dependency Injection**: Container and @Inject decorator usage
+- **Simple Bootstrap**: `new Application().run().catch(console.error)`
+- **Dependency Injection**: Automatic component scanning and resolution
 - **Configuration Management**: @Value decorator with YAML files
 - **Profile-based Activation**: @Profile decorator for environment-specific components
 - **Resource Loading**: ResourceLoader for reading files from resources/
 - **Service Architecture**: @Service, @Component, @Configuration decorators
 - **Logging Service**: Configurable logging with different levels and formats
-- **Data Processing**: Batch processing with configurable parameters
 
-Run the example:
+Run:
 ```bash
 cd examples/cli-tool
 pnpm install
-pnpm dev                                    # default profile
-KIQJS_PROFILES_ACTIVE=production pnpm dev  # production profile
-KIQJS_PROFILES_ACTIVE=debug pnpm dev       # debug profile
+pnpm dev
+```
+
+### Daemon Worker Example
+
+Check [examples/daemon-worker](./examples/daemon-worker) for a long-running worker process:
+
+- **Infinite Loop Pattern**: Worker runs continuously with `while(running)`
+- **Graceful Shutdown**: Responds to SIGTERM/SIGINT signals
+- **Task Processing**: Batch processing with configurable intervals
+- **Cleanup**: Proper shutdown with statistics logging
+- **Docker/K8s Ready**: Perfect for containerized deployments
+
+Run:
+```bash
+cd examples/daemon-worker
+pnpm install
+pnpm dev  # Press Ctrl+C to test graceful shutdown
 ```
 
 ### Web Application Example
@@ -556,12 +563,12 @@ Check [examples/thread-architecture](./examples/thread-architecture) for a compl
 
 - **THREAD Architecture** pattern (domain-driven, feature-oriented)
 - **REST API** with validation
+- **Auto-config**: Server settings loaded from YAML automatically
 - **Profile-based component activation**
 - **YAML configuration** with profiles
 - **Resource loading** (templates, configs)
-- **Repository pattern**
 
-Run the example:
+Run:
 ```bash
 cd examples/thread-architecture
 pnpm install
