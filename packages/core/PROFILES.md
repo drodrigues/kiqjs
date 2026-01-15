@@ -5,17 +5,27 @@ KiqJS Core provides a `@Profile` decorator for activating components based on th
 ## Features
 
 - 🎯 **Profile-based Activation**: Components only load in specific profiles
-- 🔧 **Configuration-based**: Uses `kiqjs.profiles.active` from YAML
-- 🌍 **Environment Variable Support**: Falls back to `NODE_ENV`
+- 🔧 **Configuration-based**: Uses `kiq.profiles.active` from YAML
+- 🌍 **Environment Variable Support**: `KIQ_PROFILES` (highest priority) or `NODE_ENV`
 - ❗ **Negation Support**: Use `!production` to activate in all profiles except production
-- 📦 **Multiple Profiles**: Support for arrays like `['development', 'test']`
+- 📦 **Multiple Profiles**: Support for arrays like `['development', 'test']` and comma-separated env vars
 - 🏗️ **Works with All Decorators**: `@Service`, `@Component`, `@Configuration`, `@Repository`
 
 ## Quick Start
 
 ### 1. Configure Active Profile
 
-Set the active profile in `resources/application.yml`:
+**Option 1: KIQ_PROFILES environment variable (highest priority)**
+
+```bash
+# Single profile
+KIQ_PROFILES=production node dist/app.js
+
+# Multiple profiles (comma-separated)
+KIQ_PROFILES=production,monitoring,debug node dist/app.js
+```
+
+**Option 2: YAML configuration**
 
 ```yaml
 # resources/application.yml
@@ -24,7 +34,7 @@ kiq:
     active: development
 ```
 
-Or use environment variable:
+**Option 3: NODE_ENV environment variable**
 
 ```bash
 NODE_ENV=production node dist/app.js
@@ -67,29 +77,41 @@ export class DebugService {
 
 Profiles are determined in this order (first wins):
 
-1. `kiqjs.profiles.active` in `resources/application.yml`
-2. `NODE_ENV` environment variable
-3. `'development'` (default)
+1. **`KIQ_PROFILES` environment variable** (highest priority)
+   - Supports comma-separated values: `KIQ_PROFILES=production,monitoring,debug`
+   - Useful for Docker/Kubernetes deployments
+2. **`kiq.profiles.active`** in `resources/application.yml`
+   - YAML-based configuration
+   - Supports comma-separated values
+3. **`NODE_ENV` environment variable**
+   - Standard Node.js convention
+4. **`'development'`** (default)
 
 ### Examples
 
+```bash
+# Highest priority - KIQ_PROFILES environment variable
+KIQ_PROFILES=production,monitoring node dist/app.js
+
+# Even if YAML says 'development', KIQ_PROFILES wins
+```
+
 ```yaml
 # resources/application.yml
+# Second priority - YAML configuration
 kiq:
   profiles:
     active: production
-```
 
-```bash
-# Override with environment variable
-NODE_ENV=staging node dist/app.js
-```
-
-```bash
 # Multiple profiles (comma-separated)
-spring:
+kiq:
   profiles:
     active: dev,local,debug
+```
+
+```bash
+# Third priority - NODE_ENV
+NODE_ENV=staging node dist/app.js
 ```
 
 ## Decorator Order
@@ -323,7 +345,7 @@ if (isProfileActive(['development', 'test'])) {
 
 ```yaml
 # resources/application.yml
-spring:
+kiq:
   profiles:
     active: development  # Default profile
 
@@ -367,9 +389,15 @@ Support for comma-separated profiles:
 
 ```yaml
 # resources/application.yml
-spring:
+kiq:
   profiles:
     active: dev,local,debug
+```
+
+Or using environment variable:
+
+```bash
+KIQ_PROFILES=dev,local,debug node dist/app.js
 ```
 
 Components can match any of the active profiles:
@@ -382,6 +410,88 @@ export class DevService {}
 @Service()
 @Profile('local')  // Matches if 'local' is in active profiles
 export class LocalService {}
+```
+
+## Environment-Based Profile Activation
+
+The `KIQ_PROFILES` environment variable is particularly useful for containerized deployments where you want to avoid modifying YAML files.
+
+### Docker Example
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+COPY . .
+RUN npm install && npm run build
+
+# Set profiles via environment variable
+ENV KIQ_PROFILES=production,monitoring
+
+CMD ["node", "dist/app.js"]
+```
+
+```bash
+# Override at runtime
+docker run -e KIQ_PROFILES=production,debug myapp:latest
+```
+
+### Kubernetes Example
+
+```yaml
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        env:
+        - name: KIQ_PROFILES
+          value: "production,monitoring,k8s"
+```
+
+### CI/CD Example
+
+```yaml
+# .github/workflows/deploy.yml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Staging
+        run: |
+          KIQ_PROFILES=staging,debug npm start
+
+      - name: Deploy to Production
+        run: |
+          KIQ_PROFILES=production,monitoring npm start
+```
+
+### Docker Compose Example
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  app:
+    build: .
+    environment:
+      KIQ_PROFILES: "development,local"
+    ports:
+      - "3000:3000"
+
+  app-production:
+    build: .
+    environment:
+      KIQ_PROFILES: "production,monitoring"
+    ports:
+      - "8080:8080"
 ```
 
 ## Best Practices
@@ -412,7 +522,7 @@ export class LocalService {}
    ```typescript
    /**
     * Production-only service
-    * Requires: kiqjs.profiles.active=production
+    * Requires: kiq.profiles.active=production OR KIQ_PROFILES=production
     */
    @Service()
    @Profile('production')
@@ -437,7 +547,7 @@ export class LocalService {}
 6. **Default to Safe Profiles**
    ```yaml
    # Default to development for safety
-   spring:
+   kiq:
      profiles:
        active: development
    ```
@@ -569,9 +679,10 @@ KiqJS `@Profile` is inspired by Spring Boot's `@Profile`:
 | `@Profile("dev")` | `@Profile('development')` |
 | `@Profile({"dev", "test"})` | `@Profile(['development', 'test'])` |
 | `@Profile("!prod")` | `@Profile('!production')` |
-| `spring.profiles.active` (application.properties) | `kiqjs.profiles.active` (resources/application.yml) |
+| `spring.profiles.active` (application.properties) | `kiq.profiles.active` (resources/application.yml) |
+| `SPRING_PROFILES_ACTIVE` env var | `KIQ_PROFILES` env var |
 | `@Component @Profile("dev")` | `@Service() @Profile('development')` |
-| Multiple active profiles | Comma-separated in YAML |
+| Multiple active profiles | Comma-separated in YAML or `KIQ_PROFILES` |
 
 ## Troubleshooting
 
@@ -592,15 +703,20 @@ export class MyService {}
 
 **Problem:** Wrong profile is active.
 
-**Solution:** Check priority order:
-1. `kiqjs.profiles.active` in `resources/application.yml`
-2. `NODE_ENV` environment variable
-3. Default: `'development'`
+**Solution:** Check priority order (highest to lowest):
+1. `KIQ_PROFILES` environment variable
+2. `kiq.profiles.active` in `resources/application.yml`
+3. `NODE_ENV` environment variable
+4. Default: `'development'`
 
 ```typescript
 import { getActiveProfiles } from '@kiqjs/core';
 
 console.log('Active profiles:', getActiveProfiles());
+
+// Check specific environment variables
+console.log('KIQ_PROFILES:', process.env.KIQ_PROFILES);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 ```
 
 ### Profile Not Matching
