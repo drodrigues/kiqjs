@@ -20,16 +20,16 @@ A dependency injection framework for TypeScript/Node.js with decorators, YAML co
 Core dependency injection container with configuration management.
 
 ```typescript
-import { Service, Inject, Value, Configuration, Bean, Profile } from '@kiqjs/core';
+import { Service, Inject, Value, Configuration, Bean, Profile, PostConstruct } from '@kiqjs/core';
 
 @Service()
 @Profile('development')
 export class UserService {
-  @Value('app.name')
-  private appName: string;
-
   @Inject()
-  private userRepository: UserRepository;
+  private userRepository!: UserRepository;
+
+  @Value('app.name')
+  private appName!: string;
 
   @PostConstruct()
   init() {
@@ -39,9 +39,18 @@ export class UserService {
 
 @Configuration()
 export class AppConfig {
+  @Value('database.host')
+  private dbHost!: string;
+
+  @Value('database.port')
+  private dbPort!: number;
+
   @Bean()
   database() {
-    return new Database({ host: 'localhost', port: 5432 });
+    return new Database({
+      host: this.dbHost,
+      port: this.dbPort
+    });
   }
 }
 ```
@@ -120,46 +129,71 @@ For applications that don't need HTTP (CLI tools, background workers, scheduled 
 
 ```typescript
 // src/services/TaskService.ts
-import { Service, Value, PostConstruct } from '@kiqjs/core';
+import { Service, Value, Inject } from '@kiqjs/core';
+import { LoggerService } from './LoggerService';
 
 @Service()
 export class TaskService {
-  @Value('app.name')
-  private appName: string;
+  @Inject()
+  private logger!: LoggerService;
 
-  @PostConstruct()
-  init() {
-    console.log(`${this.appName} - Task Service initialized`);
-  }
+  @Value('app.name')
+  private appName!: string;
 
   async processTask(data: any) {
-    console.log('Processing task:', data);
+    this.logger.info(`${this.appName} - Processing task:`, data);
     // Your business logic here
   }
 }
 
 // src/Application.ts
-import { KiqApplication, runApplication } from '@kiqjs/core';
+import 'reflect-metadata';
+import { Component, Container, Inject, runApplication } from '@kiqjs/core';
 import { TaskService } from './services/TaskService';
 
-@KiqApplication()
+@Component()
 class Application {
+  @Inject()
+  private taskService!: TaskService;
+
+  @Inject()
+  private container!: Container;
+
   async run() {
-    const container = await runApplication(Application);
-    const taskService = container.get(TaskService);
-
     // Run your tasks
-    await taskService.processTask({ id: 1, name: 'Example' });
-
+    await this.taskService.processTask({ id: 1, name: 'Example' });
     console.log('Application completed!');
   }
 }
 
-new Application().run().catch(console.error);
+// Bootstrap the application
+async function bootstrap() {
+  try {
+    // runApplication() automatically:
+    // - Scans and registers all components
+    // - Creates the container
+    // - Resolves dependencies
+    // - Returns the container
+    const container = await runApplication(Application);
+
+    // Get the application instance and run it
+    const app = container.get(Application);
+    await app.run();
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
 ```
 
 **Configuration (resources/application.yml):**
 ```yaml
+kiq:
+  profiles:
+    active: development
+
 app:
   name: My CLI Tool
   version: 1.0.0
@@ -170,7 +204,17 @@ app:
 ts-node src/Application.ts
 ```
 
-See [examples/cli-tool](./examples/cli-tool) for a complete example.
+**Key Points:**
+- Use `@Component()` decorator on your main application class
+- Use `@Inject()` to inject dependencies (including the `Container` itself)
+- `runApplication()` handles all the bootstrapping automatically
+- Access the Container to dynamically resolve optional dependencies
+
+See [examples/cli-tool](./examples/cli-tool) for a complete example with:
+- Configuration management with `@Value`
+- Profile-based components with `@Profile`
+- Resource loading with `ResourceLoader`
+- Logging and data processing services
 
 ### Using @kiqjs/http (Web Applications)
 
@@ -254,14 +298,15 @@ export class UserController {
 
 ```typescript
 // src/Application.ts
-import { KiqApplication } from '@kiqjs/core';
+import 'reflect-metadata';
+import { Component } from '@kiqjs/core';
 import { KiqHttpApplication } from '@kiqjs/http';
 
-@KiqApplication()
+@Component()
 class Application {
   async run() {
     const app = new KiqHttpApplication(Application, {
-      port: 3000,
+      port: 3000,       // or load from YAML with server.port
       logging: true,
       errorHandler: true,
       bodyParser: true,
@@ -484,15 +529,44 @@ export class UserRepository {
 
 ## Examples
 
-Check the [examples/thread-architecture](./examples/thread-architecture) folder for a complete application demonstrating:
+### CLI Tool Example
 
-- THREAD Architecture pattern
-- Profile-based component activation
-- YAML configuration with profiles
-- Resource loading (templates, configs)
-- REST API with validation
-- Domain-driven design
-- Repository pattern
+Check [examples/cli-tool](./examples/cli-tool) for a complete CLI application using @kiqjs/core:
+
+- **Dependency Injection**: Container and @Inject decorator usage
+- **Configuration Management**: @Value decorator with YAML files
+- **Profile-based Activation**: @Profile decorator for environment-specific components
+- **Resource Loading**: ResourceLoader for reading files from resources/
+- **Service Architecture**: @Service, @Component, @Configuration decorators
+- **Logging Service**: Configurable logging with different levels and formats
+- **Data Processing**: Batch processing with configurable parameters
+
+Run the example:
+```bash
+cd examples/cli-tool
+pnpm install
+pnpm dev                                    # default profile
+KIQJS_PROFILES_ACTIVE=production pnpm dev  # production profile
+KIQJS_PROFILES_ACTIVE=debug pnpm dev       # debug profile
+```
+
+### Web Application Example
+
+Check [examples/thread-architecture](./examples/thread-architecture) for a complete web application:
+
+- **THREAD Architecture** pattern (domain-driven, feature-oriented)
+- **REST API** with validation
+- **Profile-based component activation**
+- **YAML configuration** with profiles
+- **Resource loading** (templates, configs)
+- **Repository pattern**
+
+Run the example:
+```bash
+cd examples/thread-architecture
+pnpm install
+pnpm dev
+```
 
 ## TypeScript Configuration
 
