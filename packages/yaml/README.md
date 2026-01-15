@@ -4,12 +4,12 @@ YAML configuration templates and helpers for KiqJS applications with server conf
 
 ## Features
 
-- 📄 **Default Configuration Templates**: Ready-to-use YAML configuration files
-- 🎯 **Profile-based Configs**: Development and production profile templates
-- 🔧 **Type-safe Helpers**: TypeScript functions to access common configurations
-- 🚀 **Server Config**: Pre-configured server settings (port, host, prefix)
-- 📊 **Logging Config**: Standard logging configuration structure
-- 🎨 **Feature Flags**: Built-in support for feature flag patterns
+- **Default Configuration Templates**: Ready-to-use YAML configuration files
+- **Profile-based Configs**: Development and production profile templates
+- **Type-safe Helpers**: TypeScript functions to access common configurations
+- **Server Config**: Pre-configured server settings (port, host, prefix)
+- **Logging Config**: Standard logging configuration structure
+- **Feature Flags**: Built-in support for feature flag patterns
 
 ## Installation
 

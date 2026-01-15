@@ -1,14 +1,14 @@
 # KiqJS
 
-A Spring Boot-inspired dependency injection framework for TypeScript/Node.js with decorators, YAML configuration, and profile-based component activation.
+A dependency injection framework for TypeScript/Node.js with decorators, YAML configuration, and profile-based component activation.
 
 ## Features
 
 - **Dependency Injection**: Constructor and property injection with `@Service`, `@Component`, `@Repository`
-- **Configuration Management**: Spring Boot style YAML configuration with profiles
+- **Configuration Management**: YAML configuration with profiles
 - **Profile-based Activation**: Conditional component registration using `@Profile` decorator
 - **Resource Loading**: Load templates, configs, and assets from `resources/` folder
-- **HTTP Decorators**: Spring MVC style REST controllers with `@RestController`, `@GetMapping`, etc.
+- **HTTP Decorators**: REST controllers with `@RestController`, `@GetMapping`, etc.
 - **DTO Validation**: Automatic request validation with `class-validator` decorators
 - **Bean Management**: Factory methods with `@Configuration` and `@Bean` decorators
 - **Lifecycle Hooks**: `@PostConstruct` for initialization logic
@@ -53,7 +53,7 @@ export class AppConfig {
 
 ### @kiqjs/http
 
-HTTP framework with Spring MVC style decorators.
+HTTP framework with REST decorators.
 
 ```typescript
 import { RestController, GetMapping, PostMapping, PathVariable, RequestBody, Valid } from '@kiqjs/http';
@@ -138,7 +138,7 @@ my-project/
 ### 2. Configuration (resources/application.yml)
 
 ```yaml
-spring:
+kiqjs:
   profiles:
     active: development
 
@@ -226,11 +226,11 @@ NODE_ENV=production npm start
 
 ## Configuration Management
 
-KiqJS uses Spring Boot style YAML configuration:
+KiqJS uses YAML configuration with profile support:
 
 ```yaml
 # resources/application.yml
-spring:
+kiqjs:
   profiles:
     active: development
 
@@ -294,7 +294,7 @@ export class DebugService {}
 
 ```yaml
 # resources/application.yml
-spring:
+kiqjs:
   profiles:
     active: production
 ```
@@ -326,7 +326,7 @@ export class EmailService {
 
 ## HTTP Decorators
 
-Spring MVC style REST controllers:
+REST controllers with decorator support:
 
 ```typescript
 @RestController('/api/users')
@@ -464,25 +464,7 @@ KiqJS promotes clean architecture with:
 - **Configuration Management**: Centralized, environment-aware configuration
 - **Profile-based Activation**: Environment-specific implementations
 - **Type Safety**: Full TypeScript support
-- **Spring Boot Familiarity**: Easy migration for Java/Spring developers
-
-## Comparison with Spring Boot
-
-| Spring Boot | KiqJS |
-|-------------|-------|
-| `@Service` | `@Service()` |
-| `@Component` | `@Component()` |
-| `@Configuration` | `@Configuration()` |
-| `@Bean` | `@Bean()` |
-| `@Value("${key}")` | `@Value('key')` |
-| `@Autowired` | `@Inject()` or constructor injection |
-| `@RestController` | `@RestController()` |
-| `@GetMapping` | `@GetMapping()` |
-| `@PathVariable` | `@PathVariable()` |
-| `@RequestBody` | `@RequestBody()` |
-| `@Profile("dev")` | `@Profile('development')` |
-| `application.properties` | `resources/application.yml` |
-| `spring.profiles.active` | `kiqjs.profiles.active` |
+- **Decorator-based**: Clean, declarative API with TypeScript decorators
 
 ## Development
 
@@ -511,4 +493,4 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 ## Author
 
-Built with inspiration from Spring Boot for the Node.js/TypeScript ecosystem.
+Built for the Node.js/TypeScript ecosystem.

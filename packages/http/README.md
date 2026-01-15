@@ -1,20 +1,20 @@
 # @kiqjs/http
 
-> HTTP integration for KiqJS - Spring Boot-inspired REST API decorators for Node.js/TypeScript
+> HTTP integration for KiqJS - REST API decorators for Node.js/TypeScript
 
 ## Overview
 
-`@kiqjs/http` provides Spring Boot-style decorators for building REST APIs with **KiqJS** and **Koa**. It enables you to create HTTP endpoints using familiar annotations like `@RestController`, `@GetMapping`, `@PostMapping`, etc.
+`@kiqjs/http` provides decorators for building REST APIs with **KiqJS** and **Koa**. It enables you to create HTTP endpoints using annotations like `@RestController`, `@GetMapping`, `@PostMapping`, etc.
 
 ## Features
 
-✅ **Spring Boot-compatible decorators** - Familiar syntax for Java/Spring developers
-✅ **Automatic route registration** - No manual router configuration needed
-✅ **Type-safe parameter extraction** - `@PathVariable`, `@RequestBody`, `@RequestParam`
-✅ **Dependency injection** - Seamless integration with `@kiqjs/core`
-✅ **Koa integration** - Built on top of Koa and @koa/router
-✅ **Built-in error handling** - Automatic error responses
-✅ **Request logging** - Optional request/response logging
+- **Decorator-based routing** - Clean, declarative API for defining routes
+- **Automatic route registration** - No manual router configuration needed
+- **Type-safe parameter extraction** - `@PathVariable`, `@RequestBody`, `@RequestParam`
+- **Dependency injection** - Seamless integration with `@kiqjs/core`
+- **Koa integration** - Built on top of Koa and @koa/router
+- **Built-in error handling** - Automatic error responses
+- **Request logging** - Optional request/response logging
 
 ## Installation
 
@@ -259,7 +259,7 @@ handle(@Request() req: Koa.Request, @Response() res: Koa.Response) {
 
 ## KiqHttpApplication
 
-The `KiqHttpApplication` class provides a Spring Boot-like way to bootstrap your application.
+The `KiqHttpApplication` class provides a simple way to bootstrap your application.
 
 ```typescript
 const app = new KiqHttpApplication(MyAppClass, {
@@ -307,48 +307,6 @@ getUser(@PathVariable('id') id: string) {
     throw new HttpError(404, 'User not found');
   }
   return user;
-}
-```
-
-## Comparison with Spring Boot
-
-### Spring Boot (Java)
-
-```java
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
-    @Autowired
-    private UserService userService;
-
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable String id) {
-        return userService.findById(id);
-    }
-
-    @PostMapping
-    public User createUser(@RequestBody CreateUserDto dto) {
-        return userService.create(dto);
-    }
-}
-```
-
-### KiqJS (TypeScript)
-
-```typescript
-@RestController('/api/users')
-class UserController {
-  constructor(private userService: UserService) {}
-
-  @GetMapping('/:id')
-  getUser(@PathVariable('id') id: string) {
-    return this.userService.findById(id);
-  }
-
-  @PostMapping()
-  createUser(@RequestBody() dto: CreateUserDto) {
-    return this.userService.create(dto);
-  }
 }
 ```
 
