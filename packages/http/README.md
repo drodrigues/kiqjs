@@ -257,17 +257,69 @@ handle(@Request() req: Koa.Request, @Response() res: Koa.Response) {
 }
 ```
 
+## Automatic Server Configuration
+
+`@kiqjs/http` automatically reads server configuration from your YAML files. No manual configuration needed!
+
+### Configuration File
+
+```yaml
+# resources/application.yml
+server:
+  port: 3000
+  host: localhost
+  prefix: /api
+```
+
+### Application Bootstrap
+
+```typescript
+@KiqApplication()
+class MyApp {
+  async run() {
+    // Configuration is read automatically from resources/application.yml
+    const app = new KiqHttpApplication(MyApp, {
+      logging: true,
+      errorHandler: true,
+      bodyParser: true,
+    });
+
+    await app.start(); // Uses port, host, and prefix from YAML
+  }
+}
+```
+
+### Configuration Priority
+
+1. Parameters passed to `start()` method (highest priority)
+2. Options passed to constructor
+3. YAML configuration (`server.port`, `server.host`, `server.prefix`)
+4. Default values (port: 3000, host: 'localhost', prefix: '')
+
+### Override at Runtime
+
+```typescript
+// Override specific values
+const app = new KiqHttpApplication(MyApp, {
+  port: 8080,  // Override YAML port
+});
+
+// Or override when starting
+await app.start(4000); // Override both constructor and YAML
+```
+
 ## KiqHttpApplication
 
 The `KiqHttpApplication` class provides a simple way to bootstrap your application.
 
 ```typescript
 const app = new KiqHttpApplication(MyAppClass, {
-  port: 3000,                    // Port to listen on
+  port: 3000,                    // Optional: override YAML config
+  host: 'localhost',             // Optional: override YAML config
   bodyParser: true,              // Enable body parser (default: true)
   errorHandler: true,            // Enable error handler (default: true)
   logging: true,                 // Enable request logging (default: false)
-  prefix: '/api/v1',             // Router prefix (optional)
+  prefix: '/api/v1',             // Optional: override YAML config
   middlewares: [/* custom */],   // Custom middlewares (optional)
 });
 
@@ -280,6 +332,7 @@ await app.start();
 - `getRouter()` - Returns the Router instance
 - `getContainer()` - Returns the KiqJS container
 - `use(middleware)` - Adds a custom middleware
+- `start(port?, host?)` - Starts the server (optional port and host override all configurations)
 
 ## Error Handling
 
