@@ -136,7 +136,7 @@ export function Bean(name?: string, scope: 'singleton' | 'prototype' = 'singleto
  *
  * Marks a component to be active only in specific profiles.
  * The active profile is determined by:
- * 1. kiqjs.profiles.active in application.yml
+ * 1. kiq.profiles.active in application.yml
  * 2. NODE_ENV environment variable
  * 3. 'development' (default)
  *

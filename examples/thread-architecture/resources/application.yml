@@ -4,7 +4,7 @@
 # Active profiles
 # Determines which @Profile components are active
 # Can be overridden by NODE_ENV environment variable
-kiqjs:
+kiq:
   profiles:
     active: development
 

@@ -1,6 +1,6 @@
 # Production profile configuration
 # Overrides values from application.yml when NODE_ENV=production
-# Or when kiqjs.profiles.active=production in application.yml
+# Or when kiq.profiles.active=production in application.yml
 
 server:
   port: 8080

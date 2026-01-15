@@ -76,7 +76,7 @@ app.start(serverConfig.port, serverConfig.host).then(() => {
 
 ```yaml
 # Active profiles
-kiqjs:
+kiq:
   profiles:
     active: development
 
@@ -204,7 +204,7 @@ Switch between profiles using:
 
 1. YAML configuration:
 ```yaml
-kiqjs:
+kiq:
   profiles:
     active: production
 ```

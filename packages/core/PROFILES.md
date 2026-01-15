@@ -19,7 +19,7 @@ Set the active profile in `resources/application.yml`:
 
 ```yaml
 # resources/application.yml
-kiqjs:
+kiq:
   profiles:
     active: development
 ```
@@ -75,7 +75,7 @@ Profiles are determined in this order (first wins):
 
 ```yaml
 # resources/application.yml
-kiqjs:
+kiq:
   profiles:
     active: production
 ```

@@ -27,11 +27,11 @@ let configInitialized = false;
 /**
  * Load validator options from application configuration (application.yml)
  *
- * Reads configuration from kiqjs.validator key in application.yml
+ * Reads configuration from kiq.validator key in application.yml
  *
  * @example
  * # application.yml
- * kiqjs:
+ * kiq:
  *   validator:
  *     skipMissingProperties: false
  *     whitelist: true
@@ -55,8 +55,8 @@ function loadValidatorOptionsFromConfig(): ValidatorOptions {
     const { getConfiguration } = require('@kiqjs/core');
     const config = getConfiguration();
 
-    if (config.has('kiqjs.validator')) {
-      const validatorConfig = config.getObject('kiqjs.validator');
+    if (config.has('kiq.validator')) {
+      const validatorConfig = config.getObject('kiq.validator');
       cachedConfigOptions = validatorConfig;
       return validatorConfig;
     }
@@ -72,7 +72,7 @@ function loadValidatorOptionsFromConfig(): ValidatorOptions {
  * Get merged validator options
  * Priority (highest to lowest):
  * 1. Options passed programmatically
- * 2. Options from application.yml (kiqjs.validator)
+ * 2. Options from application.yml (kiq.validator)
  * 3. DEFAULT_VALIDATOR_OPTIONS
  *
  * @param options Optional validator options passed programmatically

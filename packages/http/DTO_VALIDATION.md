@@ -272,7 +272,7 @@ You can configure validator options globally in your `application.yml` file unde
 
 ```yaml
 # resources/application.yml
-kiqjs:
+kiq:
   validator:
     skipMissingProperties: false
     whitelist: true
@@ -316,14 +316,14 @@ const validated = await transformAndValidate(CreateUserDto, data, customOptions)
 The validator options are merged with the following priority (highest to lowest):
 
 1. **Programmatic options** - Options passed directly to `transformAndValidate()`
-2. **YAML configuration** - Options from `application.yml` (`kiqjs.validator`)
+2. **YAML configuration** - Options from `application.yml` (`kiq.validator`)
 3. **Default options** - Built-in defaults from `DEFAULT_VALIDATOR_OPTIONS`
 
 #### Example with Priority
 
 ```yaml
 # application.yml
-kiqjs:
+kiq:
   validator:
     whitelist: true
     forbidNonWhitelisted: false
@@ -342,7 +342,7 @@ You can have different validator configurations per environment using profiles:
 
 ```yaml
 # resources/application-development.yml
-kiqjs:
+kiq:
   validator:
     forbidNonWhitelisted: false # Lenient for development
     skipMissingProperties: true
@@ -350,7 +350,7 @@ kiqjs:
 
 ```yaml
 # resources/application-production.yml
-kiqjs:
+kiq:
   validator:
     forbidNonWhitelisted: true # Strict in production
     skipMissingProperties: false

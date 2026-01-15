@@ -50,9 +50,9 @@ describe('Profile', () => {
       expect(profiles).toEqual(['production']);
     });
 
-    it('should read from kiqjs.profiles.active in YAML config', () => {
-      // Create application.yml with kiqjs.profiles.active
-      const yamlContent = 'kiqjs:\n  profiles:\n    active: production';
+    it('should read from kiq.profiles.active in YAML config', () => {
+      // Create application.yml with kiq.profiles.active
+      const yamlContent = 'kiq:\n  profiles:\n    active: production';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
 
       // Change working directory to test resources
@@ -73,7 +73,7 @@ describe('Profile', () => {
 
     it('should support comma-separated profiles', () => {
       // Create application.yml with multiple profiles
-      const yamlContent = 'kiqjs:\n  profiles:\n    active: dev,local,debug';
+      const yamlContent = 'kiq:\n  profiles:\n    active: dev,local,debug';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
 
       const originalCwd = process.cwd();
@@ -90,10 +90,10 @@ describe('Profile', () => {
       }
     });
 
-    it('should prioritize kiqjs.profiles.active over NODE_ENV', () => {
+    it('should prioritize kiq.profiles.active over NODE_ENV', () => {
       process.env.NODE_ENV = 'test';
 
-      const yamlContent = 'kiqjs:\n  profiles:\n    active: production';
+      const yamlContent = 'kiq:\n  profiles:\n    active: production';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
 
       const originalCwd = process.cwd();
@@ -144,7 +144,7 @@ describe('Profile', () => {
     });
 
     it('should work with multiple active profiles', () => {
-      const yamlContent = 'kiqjs:\n  profiles:\n    active: dev,local';
+      const yamlContent = 'kiq:\n  profiles:\n    active: dev,local';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
 
       const originalCwd = process.cwd();
@@ -173,7 +173,7 @@ describe('Profile', () => {
     });
 
     it('should handle whitespace in comma-separated profiles', () => {
-      const yamlContent = 'kiqjs:\n  profiles:\n    active: " dev , local , test "';
+      const yamlContent = 'kiq:\n  profiles:\n    active: " dev , local , test "';
       fs.writeFileSync(path.join(testResourcesDir, 'application.yml'), yamlContent);
 
       const originalCwd = process.cwd();

@@ -1,8 +1,8 @@
 # Production-specific configuration
 # Overrides values from application.yml when NODE_ENV=production
-# Or when kiqjs.profiles.active=production in application.yml
+# Or when kiq.profiles.active=production in application.yml
 
-# Set active profile: kiqjs.profiles.active=production (in application.yml)
+# Set active profile: kiq.profiles.active=production (in application.yml)
 # Or use: NODE_ENV=production node dist/Application.js
 
 server:
