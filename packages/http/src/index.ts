@@ -20,6 +20,10 @@ export {
   Response,
 } from './decorators';
 
+// Security
+export { Security } from './security';
+export { isPublicUrl, checkSecurity, requiresAuthentication } from './security';
+
 // Application
 export { KiqHttpApplication, startKiqHttpApplication, logger } from './application';
 export type { KiqHttpApplicationOptions } from './application';

@@ -14,6 +14,7 @@ import {
   ParamMetadata,
   RouteHandlerMetadata,
 } from './metadata-keys';
+import { checkSecurity, requiresAuthentication } from './security';
 import { transformAndValidate } from './validation';
 
 /**
@@ -94,6 +95,10 @@ function registerController(controllerClass: Function, container: Container, rou
  */
 function createRouteHandler(controllerInstance: any, route: RouteHandlerMetadata) {
   return async (ctx: Koa.Context, next: Koa.Next) => {
+    // Check security first
+    const requiresAuth = requiresAuthentication(controllerInstance, route.propertyKey);
+    checkSecurity(ctx, requiresAuth);
+
     const paramMetadata: ParamMetadata[] =
       Reflect.getMetadata(META_PARAM_METADATA, controllerInstance, route.propertyKey) || [];
 

@@ -25,6 +25,13 @@ server:
   host: localhost
   prefix: /api
 
+  # Security configuration
+  security:
+    # Public URLs that don't require authentication
+    public:
+      - /api/health
+      - /api/users/*/profile  # Public user profiles
+
 # Application settings
 app:
   name: THREAD Architecture Example

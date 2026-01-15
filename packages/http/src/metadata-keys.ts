@@ -4,6 +4,7 @@ export const META_ROUTE_HANDLER = Symbol('kiq:http:route-handler');
 export const META_PARAM_METADATA = Symbol('kiq:http:param-metadata');
 export const META_DTO_CLASS = Symbol('kiq:http:dto-class');
 export const META_VALIDATE_OPTIONS = Symbol('kiq:http:validate-options');
+export const META_SECURITY = Symbol('kiq:http:security');
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
 
@@ -17,6 +18,11 @@ export interface RouteHandlerMetadata {
   method: HttpMethod;
   propertyKey: string;
   middlewares?: Function[];
+  requiresAuth?: boolean;
+}
+
+export interface SecurityMetadata {
+  requiresAuth: boolean;
 }
 
 export interface ParamMetadata {

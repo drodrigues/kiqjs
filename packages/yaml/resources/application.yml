@@ -14,6 +14,17 @@ server:
   host: localhost
   prefix: /api
 
+  # Security configuration
+  security:
+    # Public URLs that don't require authentication
+    # Supports exact matches and wildcard patterns
+    public:
+      - /health-check           # Exact match
+      - /api/health             # Exact match
+      - /public/*               # Wildcard: /public/anything
+      - /posts*                 # Prefix: /posts, /posts/123, /posts/abc
+      - /news/*/show            # Segment wildcard: /news/123/show
+
 # Application metadata
 app:
   name: KiqJS Application
