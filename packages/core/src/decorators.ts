@@ -132,11 +132,11 @@ export function Bean(name?: string, scope: 'singleton' | 'prototype' = 'singleto
 }
 
 /**
- * Profile decorator (Spring Boot style)
+ * Profile decorator
  *
  * Marks a component to be active only in specific profiles.
  * The active profile is determined by:
- * 1. spring.profiles.active in application.yml (Spring Boot compatibility)
+ * 1. kiqjs.profiles.active in application.yml
  * 2. NODE_ENV environment variable
  * 3. 'development' (default)
  *

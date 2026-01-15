@@ -4,7 +4,7 @@ import { getConfiguration } from './configuration';
  * Get the active profile(s)
  *
  * Priority:
- * 1. spring.profiles.active from application.yml (Spring Boot compatibility)
+ * 1. kiqjs.profiles.active from application.yml
  * 2. NODE_ENV environment variable
  * 3. 'development' (default)
  *
@@ -16,9 +16,9 @@ export function getActiveProfiles(): string[] {
   try {
     const config = getConfiguration();
 
-    // Check spring.profiles.active (Spring Boot compatibility)
-    if (config.has('spring.profiles.active')) {
-      const profiles = config.get<string>('spring.profiles.active');
+    // Check kiqjs.profiles.active
+    if (config.has('kiqjs.profiles.active')) {
+      const profiles = config.get<string>('kiqjs.profiles.active');
       return profiles.split(',').map((p) => p.trim());
     }
   } catch {
