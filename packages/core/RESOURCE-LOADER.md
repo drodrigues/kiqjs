@@ -1,6 +1,6 @@
-# Resource Loader (Spring Boot Style)
+# Resource Loader
 
-KiqJS Core provides a `ResourceLoader` class for loading files from the `resources/` directory, similar to Spring Boot's ResourceLoader.
+KiqJS Core provides a `ResourceLoader` class for loading files from the `resources/` directory.
 
 ## Features
 
@@ -15,7 +15,7 @@ KiqJS Core provides a `ResourceLoader` class for loading files from the `resourc
 
 ### 1. Create Resources Directory
 
-Create a `resources/` directory in your project root (Spring Boot convention):
+Create a `resources/` directory in your project root:
 
 ```
 my-project/

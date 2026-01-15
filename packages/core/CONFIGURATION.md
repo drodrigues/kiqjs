@@ -1,10 +1,10 @@
-# YAML Configuration (Spring Boot Style)
+# YAML Configuration
 
-KiqJS Core supports Spring Boot style YAML configuration files with profile support and environment variable overrides.
+KiqJS Core supports YAML configuration files with profile support and environment variable overrides.
 
 ## Features
 
-- 📄 **YAML Configuration Files**: Use `application.yml` in `resources/` folder (Spring Boot convention)
+- 📄 **YAML Configuration Files**: Use `application.yml` in `resources/` folder
 - 🎯 **Profile Support**: Environment-specific configs with `application-{profile}.yml`
 - 🔧 **Environment Variables**: Override any config with env vars
 - 💉 **@Value Decorator**: Inject configuration values into your classes
@@ -17,7 +17,7 @@ KiqJS Core supports Spring Boot style YAML configuration files with profile supp
 
 ### 1. Create Resources Directory
 
-Create a `resources/` directory in your project root (Spring Boot style):
+Create a `resources/` directory in your project root:
 
 ```yaml
 # resources/application.yml
@@ -60,7 +60,7 @@ features:
 
 ```
 my-project/
-  ├── resources/                        # Resources (Spring Boot style)
+  ├── resources/                        # Resources folder
   │   ├── application.yml               # Base configuration
   │   ├── application-development.yml   # Dev overrides
   │   ├── application-production.yml    # Prod overrides
@@ -72,7 +72,7 @@ my-project/
   └── Dockerfile
 ```
 
-**Note:** Following Spring Boot convention - `resources/` for non-code assets (YAML, templates, static files), `src/` for code. No conflict!
+**Note:** `resources/` for non-code assets (YAML, templates, static files), `src/` for code. No conflict!
 
 ### 3. Use @Value Decorator
 
@@ -125,12 +125,12 @@ The active profile is determined by:
 
 ## Directory Detection
 
-The ConfigurationLoader automatically detects the resources directory (Spring Boot style):
+The ConfigurationLoader automatically detects the resources directory:
 
 1. **Preferred**: `resources/` folder in project root
 2. **Fallback**: Project root (for backward compatibility)
 
-This follows Spring Boot convention and keeps your project organized.
+This keeps your project organized.
 
 ## Environment Variable Overrides
 
@@ -257,7 +257,7 @@ if (config.has('features.newFeature')) {
 
 ## Docker Support
 
-The `resources/` folder structure makes Docker deployments clean and efficient (Spring Boot style):
+The `resources/` folder structure makes Docker deployments clean and efficient:
 
 ```dockerfile
 # Dockerfile
@@ -269,7 +269,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --production
 
-COPY resources/ ./resources/     # Configuration files (Spring Boot style)
+COPY resources/ ./resources/     # Configuration files
 COPY dist/ ./dist/               # Compiled code
 
 CMD ["node", "dist/index.js"]
@@ -297,7 +297,7 @@ CMD ["node", "dist/index.js"]
 ```
 
 Benefits:
-- ✅ Clean separation of concerns (Spring Boot style)
+- ✅ Clean separation of concerns
 - ✅ Easy to override configs per environment
 - ✅ Smaller Docker layers
 - ✅ No root pollution
@@ -310,7 +310,7 @@ Benefits:
 3. **Environment Secrets**: Never commit secrets, use env vars
 4. **Type Safety**: Use `@Value` decorator for type-safe injection
 5. **Documentation**: Comment your YAML files
-6. **Docker**: Keep configs in `resources/` for clean containerization (Spring Boot style)
+6. **Docker**: Keep configs in `resources/` for clean containerization
 7. **Git**: Add `resources/application-local.yml` to `.gitignore` for local overrides
 8. **Multi-Purpose**: Use `resources/` for templates, static files, and other non-code assets
 

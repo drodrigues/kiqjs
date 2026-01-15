@@ -1,11 +1,11 @@
-# Profile-based Component Activation (Spring Boot Style)
+# Profile-based Component Activation
 
-KiqJS Core provides a `@Profile` decorator for activating components based on the active profile, similar to Spring Boot's `@Profile` annotation.
+KiqJS Core provides a `@Profile` decorator for activating components based on the active profile.
 
 ## Features
 
 - 🎯 **Profile-based Activation**: Components only load in specific profiles
-- 🔧 **Spring Boot Compatibility**: Uses `spring.profiles.active` from YAML
+- 🔧 **Configuration-based**: Uses `kiqjs.profiles.active` from YAML
 - 🌍 **Environment Variable Support**: Falls back to `NODE_ENV`
 - ❗ **Negation Support**: Use `!production` to activate in all profiles except production
 - 📦 **Multiple Profiles**: Support for arrays like `['development', 'test']`
@@ -15,11 +15,11 @@ KiqJS Core provides a `@Profile` decorator for activating components based on th
 
 ### 1. Configure Active Profile
 
-Set the active profile in `resources/application.yml` (Spring Boot style):
+Set the active profile in `resources/application.yml`:
 
 ```yaml
 # resources/application.yml
-spring:
+kiqjs:
   profiles:
     active: development
 ```
@@ -67,7 +67,7 @@ export class DebugService {
 
 Profiles are determined in this order (first wins):
 
-1. `spring.profiles.active` in `resources/application.yml` (Spring Boot compatibility)
+1. `kiqjs.profiles.active` in `resources/application.yml`
 2. `NODE_ENV` environment variable
 3. `'development'` (default)
 
@@ -75,7 +75,7 @@ Profiles are determined in this order (first wins):
 
 ```yaml
 # resources/application.yml
-spring:
+kiqjs:
   profiles:
     active: production
 ```
@@ -412,7 +412,7 @@ export class LocalService {}
    ```typescript
    /**
     * Production-only service
-    * Requires: spring.profiles.active=production
+    * Requires: kiqjs.profiles.active=production
     */
    @Service()
    @Profile('production')
@@ -569,7 +569,7 @@ KiqJS `@Profile` is inspired by Spring Boot's `@Profile`:
 | `@Profile("dev")` | `@Profile('development')` |
 | `@Profile({"dev", "test"})` | `@Profile(['development', 'test'])` |
 | `@Profile("!prod")` | `@Profile('!production')` |
-| `spring.profiles.active` (application.properties) | `spring.profiles.active` (resources/application.yml) |
+| `spring.profiles.active` (application.properties) | `kiqjs.profiles.active` (resources/application.yml) |
 | `@Component @Profile("dev")` | `@Service() @Profile('development')` |
 | Multiple active profiles | Comma-separated in YAML |
 
@@ -593,7 +593,7 @@ export class MyService {}
 **Problem:** Wrong profile is active.
 
 **Solution:** Check priority order:
-1. `spring.profiles.active` in `resources/application.yml`
+1. `kiqjs.profiles.active` in `resources/application.yml`
 2. `NODE_ENV` environment variable
 3. Default: `'development'`
 

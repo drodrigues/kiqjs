@@ -2,7 +2,7 @@
 
 **Arquitetura de Software Orientada a Domínio, Produto e Execução**
 
-Este exemplo demonstra como implementar a **THREAD Architecture** usando **KiqJS** com Spring Boot-style decorators, YAML configuration, profile-based activation, e resource loading.
+Este exemplo demonstra como implementar a **THREAD Architecture** usando **KiqJS** com decorators, YAML configuration, profile-based activation, e resource loading.
 
 ## O que é THREAD Architecture?
 
@@ -18,7 +18,7 @@ A THREAD Architecture é um padrão arquitetural que prioriza:
 
 ```
 thread-architecture/
-├── resources/                              # Spring Boot style resources
+├── resources/                              # Resources folder
 │   ├── application.yml                     # Base configuration
 │   ├── application-development.yml         # Dev profile config
 │   ├── application-production.yml          # Prod profile config
@@ -265,7 +265,7 @@ export class AppConfig {
 
 ### `resources/` - Non-Code Assets
 
-Spring Boot style resources folder for:
+Resources folder for:
 
 - YAML configuration files
 - Email templates
@@ -310,7 +310,7 @@ All files follow **PascalCase** with suffix indicating responsibility:
 # Install dependencies
 pnpm install
 
-# Run in development mode (spring.profiles.active=development)
+# Run in development mode (kiqjs.profiles.active=development)
 pnpm dev
 ```
 
@@ -571,5 +571,4 @@ For a complete production implementation, add:
 
 - [THREAD Architecture - Full Documentation](https://thread.com.br/architecture)
 - [KiqJS Documentation](../../README.md)
-- [Spring Boot](https://spring.io/projects/spring-boot)
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)

@@ -482,7 +482,7 @@ KiqJS promotes clean architecture with:
 | `@RequestBody` | `@RequestBody()` |
 | `@Profile("dev")` | `@Profile('development')` |
 | `application.properties` | `resources/application.yml` |
-| `spring.profiles.active` | `spring.profiles.active` (same!) |
+| `spring.profiles.active` | `kiqjs.profiles.active` |
 
 ## Development
 
