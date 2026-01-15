@@ -121,6 +121,12 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/yaml:
+    dependencies:
+      '@kiqjs/core':
+        specifier: workspace:*
+        version: link:../core
+
 packages:
 
   '@babel/code-frame@7.27.1':

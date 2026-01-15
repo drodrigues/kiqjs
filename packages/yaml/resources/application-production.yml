@@ -1,0 +1,16 @@
+# Production profile configuration
+# Overrides values from application.yml when NODE_ENV=production
+# Or when kiqjs.profiles.active=production in application.yml
+
+server:
+  port: 8080
+  host: 0.0.0.0
+  prefix: /api/v1
+
+logging:
+  level: warn
+  format: json
+  pretty: false
+
+features:
+  enabled: true

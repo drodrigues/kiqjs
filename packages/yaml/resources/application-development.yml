@@ -1,0 +1,15 @@
+# Development profile configuration
+# Overrides values from application.yml when NODE_ENV=development
+# Or when kiqjs.profiles.active=development in application.yml
+
+server:
+  port: 3000
+  host: localhost
+
+logging:
+  level: debug
+  format: pretty
+  pretty: true
+
+features:
+  enabled: true

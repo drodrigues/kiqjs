@@ -1,0 +1,19 @@
+{
+  "name": "@kiqjs/yaml",
+  "description": "YAML configuration templates and helpers for KiqJS applications with server configuration defaults",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@kiqjs/core": "workspace:*"
+  }
+}
