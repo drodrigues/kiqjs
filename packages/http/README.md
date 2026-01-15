@@ -11,6 +11,8 @@
 - **Decorator-based routing** - Clean, declarative API for defining routes
 - **Automatic route registration** - No manual router configuration needed
 - **Type-safe parameter extraction** - `@PathVariable`, `@RequestBody`, `@RequestParam`
+- **DTO validation** - Automatic request validation with `class-validator` decorators
+- **Route-level security** - `@Security` decorator for access control
 - **Dependency injection** - Seamless integration with `@kiqjs/core`
 - **Koa integration** - Built on top of Koa and @koa/router
 - **Security by default** - Helmet middleware enabled by default for secure HTTP headers
@@ -405,6 +407,135 @@ await app.start();
 - `use(middleware)` - Adds a custom middleware
 - `start(port?, host?)` - Starts the server (optional port and host override all configurations)
 
+## DTO Validation
+
+Automatic request validation using `class-validator` decorators:
+
+```typescript
+import { IsString, IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { RestController, PostMapping, RequestBody, Valid } from '@kiqjs/http';
+
+// Define your DTO with validation rules
+export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(3)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+}
+
+@RestController('/api/users')
+export class UserController {
+  @PostMapping()
+  async createUser(@RequestBody() @Valid() dto: CreateUserDto) {
+    // dto is automatically validated
+    // If validation fails, returns 400 with detailed error messages
+    return this.userService.create(dto);
+  }
+}
+```
+
+### Validation Configuration
+
+Configure validation options in `resources/application.yml`:
+
+```yaml
+kiq:
+  validator:
+    skipMissingProperties: false
+    whitelist: true              # Strip properties not in DTO
+    forbidNonWhitelisted: true   # Reject extra properties
+    forbidUnknownValues: true    # Reject unknown types
+```
+
+For more validation decorators, see [class-validator documentation](https://github.com/typestack/class-validator).
+
+## Route-Level Security
+
+Control access to routes using the `@Security` decorator:
+
+```typescript
+import { RestController, GetMapping, PostMapping, Security } from '@kiqjs/http';
+
+@RestController('/api/users')
+export class UserController {
+  // Public endpoint - no authentication required
+  @GetMapping('/profile/:id')
+  getPublicProfile(@PathVariable('id') id: string) {
+    return this.userService.getPublicProfile(id);
+  }
+
+  // Protected endpoint - authentication required
+  @GetMapping('/me')
+  @Security()
+  getCurrentUser() {
+    return this.userService.getCurrentUser();
+  }
+
+  // Protected endpoint - authentication required
+  @PostMapping()
+  @Security()
+  createUser(@RequestBody() @Valid() dto: CreateUserDto) {
+    return this.userService.create(dto);
+  }
+}
+```
+
+### Public URL Configuration
+
+Configure public URLs (that bypass authentication) in `resources/application.yml`:
+
+```yaml
+server:
+  security:
+    public:
+      - /api/health              # Exact match
+      - /api/public/*            # Wildcard match
+      - /api/users/*/profile     # Segment wildcard
+```
+
+**Pattern Types:**
+- **Exact match**: `/api/health` - Matches only this exact path
+- **Wildcard**: `/api/public/*` - Matches any path starting with `/api/public/`
+- **Segment wildcard**: `/api/users/*/profile` - Matches `/api/users/123/profile`, `/api/users/abc/profile`, etc.
+
+**Important:** The `@Security` decorator marks routes that require authentication, but it **does not implement authentication**. You need to implement your own authentication middleware (JWT, sessions, etc.) and integrate it with the security system.
+
+### Example: Implementing JWT Authentication
+
+```typescript
+import jwt from 'jsonwebtoken';
+import { Context, Next } from 'koa';
+
+// Custom authentication middleware
+export async function jwtAuthMiddleware(ctx: Context, next: Next) {
+  // Skip authentication for public URLs (already handled by @Security)
+  const token = ctx.headers.authorization?.replace('Bearer ', '');
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      ctx.state.user = decoded;
+    } catch (error) {
+      ctx.throw(401, 'Invalid token');
+    }
+  }
+
+  await next();
+}
+
+// Add to your application
+const app = new KiqHttpApplication(MyApp, {
+  middlewares: [jwtAuthMiddleware],
+});
+```
+
 ## Error Handling
 
 Errors thrown in controllers are automatically caught and formatted:
@@ -419,24 +550,52 @@ getUser(@PathVariable('id') id: string) {
 }
 ```
 
-For custom HTTP status codes, use the `HttpError` class:
+For custom HTTP status codes, use the `KiqError` class:
 
 ```typescript
-import { HttpError } from '@kiqjs/http';
+import { KiqError } from '@kiqjs/http';
 
 @GetMapping('/:id')
 getUser(@PathVariable('id') id: string) {
   const user = this.userService.findById(id);
   if (!user) {
-    throw new HttpError(404, 'User not found');
+    throw new KiqError('User not found', 404);
   }
   return user;
 }
 ```
 
+## Security Considerations
+
+This package includes comprehensive security tests documenting potential vulnerabilities. See [`test/security-*.test.ts`](./test) for details.
+
+**Known Security Issues:**
+1. **Prototype Pollution** - Configuration merging doesn't filter dangerous keys
+2. **URL Pattern Matching** - Pattern `/posts*` matches `/postsecret` (too broad)
+3. **No Authentication Verification** - `@Security` decorator only checks URL patterns, doesn't verify actual authentication
+4. **Input Validation** - Validation is optional (easy to forget `@Valid` decorator)
+5. **Information Disclosure** - Stack traces and sensitive data may be exposed in errors
+
+**Recommendations:**
+- Always use `@Valid()` decorator with `@RequestBody()` for input validation
+- Configure strict validator options (`forbidNonWhitelisted: true`)
+- Implement proper authentication middleware with JWT or sessions
+- Use environment-specific error handling (hide stack traces in production)
+- Review and test public URL patterns carefully
+- Implement rate limiting and request size limits
+- Use HTTPS in production
+
+For detailed security analysis, see the test files:
+- `test/security-configuration.test.ts` - Configuration security
+- `test/security-authentication.test.ts` - Authentication bypass vulnerabilities
+- `test/security-injection.test.ts` - Injection vulnerabilities
+- `test/security-validation.test.ts` - Validation bypass
+- `test/security-disclosure.test.ts` - Information disclosure
+- `test/security-dos.test.ts` - Denial of Service vulnerabilities
+
 ## Example
 
-See the complete example at [`examples/spring-rest-api`](../../examples/spring-rest-api).
+See the complete example at [`examples/thread-architecture`](../../examples/thread-architecture).
 
 ## License
 
