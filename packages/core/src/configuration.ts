@@ -107,6 +107,11 @@ export class ConfigurationLoader {
    */
   private mergeConfig(target: Record<string, any>, source: Record<string, any>): void {
     for (const key in source) {
+      // Prevent prototype pollution
+      if (this.isDangerousKey(key)) {
+        continue;
+      }
+
       if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
         if (!target[key] || typeof target[key] !== 'object') {
           target[key] = {};
@@ -119,6 +124,14 @@ export class ConfigurationLoader {
   }
 
   /**
+   * Check if a key is dangerous for prototype pollution
+   */
+  private isDangerousKey(key: string): boolean {
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+    return dangerousKeys.includes(key);
+  }
+
+  /**
    * Flatten nested object into dot notation
    *
    * @example
@@ -128,6 +141,11 @@ export class ConfigurationLoader {
     const result: Record<string, any> = {};
 
     for (const key in obj) {
+      // Prevent prototype pollution
+      if (this.isDangerousKey(key)) {
+        continue;
+      }
+
       const fullKey = prefix ? `${prefix}.${key}` : key;
 
       if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
@@ -150,19 +168,55 @@ export class ConfigurationLoader {
    */
   private overrideWithEnv(): void {
     for (const key in this.flatConfig) {
+      // Prevent prototype pollution via environment variables
+      if (this.isDangerousKey(key)) {
+        continue;
+      }
+
       // Convert dot notation to uppercase underscore notation
       // server.port => SERVER_PORT
       const envKey = key.toUpperCase().replace(/\./g, '_');
 
       if (process.env[envKey] !== undefined) {
-        // Try to parse as JSON, otherwise use as string
+        const envValue = process.env[envKey]!;
+
+        // Try to parse as JSON, but check for prototype pollution attempts
         try {
-          this.flatConfig[key] = JSON.parse(process.env[envKey]!);
+          const parsed = JSON.parse(envValue);
+          // Don't allow objects with dangerous keys
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            if (this.hasPrototypePollution(parsed)) {
+              continue;
+            }
+          }
+          this.flatConfig[key] = parsed;
         } catch {
-          this.flatConfig[key] = process.env[envKey];
+          this.flatConfig[key] = envValue;
         }
       }
     }
+  }
+
+  /**
+   * Check if an object has prototype pollution attempts
+   */
+  private hasPrototypePollution(obj: any): boolean {
+    if (!obj || typeof obj !== 'object') {
+      return false;
+    }
+
+    for (const key in obj) {
+      if (this.isDangerousKey(key)) {
+        return true;
+      }
+      if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+        if (this.hasPrototypePollution(obj[key])) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -218,13 +272,26 @@ export class ConfigurationLoader {
 
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
+
+      // Prevent prototype pollution
+      if (this.isDangerousKey(key)) {
+        return;
+      }
+
       if (!current[key] || typeof current[key] !== 'object') {
         current[key] = {};
       }
       current = current[key];
     }
 
-    current[keys[keys.length - 1]] = value;
+    const lastKey = keys[keys.length - 1];
+
+    // Prevent prototype pollution
+    if (this.isDangerousKey(lastKey)) {
+      return;
+    }
+
+    current[lastKey] = value;
   }
 
   /**

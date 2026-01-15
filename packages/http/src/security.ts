@@ -82,8 +82,11 @@ export function isPublicUrl(url: string): boolean {
  * @returns true if the URL matches the pattern
  */
 function matchesPattern(url: string, pattern: string): boolean {
+  // Sanitize URL to prevent bypass attempts
+  const sanitizedUrl = sanitizeUrl(url);
+
   // Remove query string and trailing slash for comparison
-  const cleanUrl = url.split('?')[0].replace(/\/$/, '');
+  const cleanUrl = sanitizedUrl.split('?')[0].replace(/\/$/, '');
   const cleanPattern = pattern.replace(/\/$/, '');
 
   // Exact match
@@ -107,6 +110,31 @@ function matchesPattern(url: string, pattern: string): boolean {
 
   const regex = new RegExp(regexPattern);
   return regex.test(cleanUrl);
+}
+
+/**
+ * Sanitize URL to prevent security bypass attempts
+ *
+ * @param url The URL to sanitize
+ * @returns Sanitized URL or an invalid path if malicious patterns detected
+ */
+function sanitizeUrl(url: string): string {
+  // Check for URL encoding bypass attempts
+  if (url.includes('%')) {
+    return '/__INVALID_URL_ENCODING__';
+  }
+
+  // Check for null byte injection
+  if (url.includes('\x00')) {
+    return '/__INVALID_NULL_BYTE__';
+  }
+
+  // Check for unicode line/paragraph separators
+  if (url.includes('\u2028') || url.includes('\u2029')) {
+    return '/__INVALID_UNICODE__';
+  }
+
+  return url;
 }
 
 /**

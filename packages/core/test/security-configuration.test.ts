@@ -7,8 +7,10 @@ import { ConfigurationLoader, getConfiguration, resetConfiguration } from '../sr
 
 describe('Configuration Security Tests', () => {
   const testResourcesDir = path.join(__dirname, 'test-resources-security-config');
+  let originalCwd: string;
 
   beforeAll(() => {
+    originalCwd = process.cwd();
     if (!fs.existsSync(testResourcesDir)) {
       fs.mkdirSync(testResourcesDir, { recursive: true });
     }
@@ -18,11 +20,26 @@ describe('Configuration Security Tests', () => {
     if (fs.existsSync(testResourcesDir)) {
       fs.rmSync(testResourcesDir, { recursive: true });
     }
+    // Ensure we're back to the original directory
+    try {
+      process.chdir(originalCwd);
+    } catch {
+      // Directory might have been deleted, ignore
+    }
   });
 
   beforeEach(() => {
     resetConfiguration();
     delete process.env.NODE_ENV;
+  });
+
+  afterEach(() => {
+    // Always restore original working directory after each test
+    try {
+      process.chdir(originalCwd);
+    } catch {
+      // Directory might have been deleted, ignore
+    }
   });
 
   describe('Prototype Pollution Vulnerabilities', () => {
