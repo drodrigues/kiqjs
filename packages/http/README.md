@@ -13,6 +13,7 @@
 - **Type-safe parameter extraction** - `@PathVariable`, `@RequestBody`, `@RequestParam`
 - **Dependency injection** - Seamless integration with `@kiqjs/core`
 - **Koa integration** - Built on top of Koa and @koa/router
+- **Security by default** - Helmet middleware enabled by default for secure HTTP headers
 - **Built-in error handling** - Automatic error responses
 - **Request logging** - Optional request/response logging
 
@@ -257,6 +258,74 @@ handle(@Request() req: Koa.Request, @Response() res: Koa.Response) {
 }
 ```
 
+## Security with Helmet
+
+`@kiqjs/http` includes **Helmet** middleware by default to help secure your application by setting various HTTP headers.
+
+### Default Security Headers
+
+When you create a `KiqHttpApplication`, these security headers are automatically added:
+
+- `Content-Security-Policy` - Helps prevent XSS attacks
+- `Strict-Transport-Security` - Enforces HTTPS
+- `X-Content-Type-Options` - Prevents MIME sniffing
+- `X-Frame-Options` - Prevents clickjacking
+- `X-XSS-Protection` - Additional XSS protection
+- And many more...
+
+### Configuring Helmet
+
+#### Via YAML Configuration
+
+```yaml
+# resources/application.yml
+server:
+  port: 3000
+  helmet:
+    enabled: true
+    options:
+      contentSecurityPolicy:
+        directives:
+          defaultSrc: ["'self'"]
+          styleSrc: ["'self'", "'unsafe-inline'"]
+```
+
+#### Via Code
+
+```typescript
+const app = new KiqHttpApplication(MyApp, {
+  helmet: true,
+  helmetOptions: {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
+  },
+});
+```
+
+### Disabling Helmet
+
+If you need to disable Helmet (not recommended for production):
+
+```typescript
+const app = new KiqHttpApplication(MyApp, {
+  helmet: false,
+});
+```
+
+Or via YAML:
+
+```yaml
+server:
+  helmet:
+    enabled: false
+```
+
+For more information on Helmet configuration options, see the [Helmet documentation](https://helmetjs.github.io/).
+
 ## Automatic Server Configuration
 
 `@kiqjs/http` automatically reads server configuration from your YAML files. No manual configuration needed!
@@ -319,6 +388,8 @@ const app = new KiqHttpApplication(MyAppClass, {
   bodyParser: true,              // Enable body parser (default: true)
   errorHandler: true,            // Enable error handler (default: true)
   logging: true,                 // Enable request logging (default: false)
+  helmet: true,                  // Enable Helmet security headers (default: true)
+  helmetOptions: {},             // Helmet configuration (optional)
   prefix: '/api/v1',             // Optional: override YAML config
   middlewares: [/* custom */],   // Custom middlewares (optional)
 });

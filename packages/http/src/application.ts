@@ -5,6 +5,7 @@ import Router from '@koa/router';
 
 import Koa from 'koa';
 import bodyParser, { KoaBodyMiddlewareOptions } from 'koa-body';
+import helmet from 'koa-helmet';
 import pino from 'pino';
 
 import { KiqError } from './exceptions';
@@ -42,6 +43,17 @@ export interface KiqHttpApplicationOptions {
    * Enable request logging (default: false)
    */
   logging?: boolean;
+
+  /**
+   * Enable helmet security middleware (default: true)
+   * Helmet helps secure apps by setting various HTTP headers
+   */
+  helmet?: boolean;
+
+  /**
+   * Helmet options (if helmet is enabled)
+   */
+  helmetOptions?: Parameters<typeof helmet>[0];
 
   /**
    * Custom Koa middlewares to apply before routes
@@ -82,13 +94,25 @@ export class KiqHttpApplication {
     this.router = new Router();
 
     // Try to read server config from YAML
-    let serverConfig: { port?: number; host?: string; prefix?: string } = {};
+    let serverConfig: {
+      port?: number;
+      host?: string;
+      prefix?: string;
+      helmet?: {
+        enabled?: boolean;
+        options?: any;
+      };
+    } = {};
     try {
       const config = getConfiguration();
       serverConfig = {
         port: config.get<number>('server.port'),
         host: config.get<string>('server.host'),
         prefix: config.get<string>('server.prefix'),
+        helmet: {
+          enabled: config.get<boolean>('server.helmet.enabled'),
+          options: config.get<any>('server.helmet.options'),
+        },
       };
     } catch {
       // Configuration not loaded yet, will use defaults
@@ -101,6 +125,8 @@ export class KiqHttpApplication {
       bodyParserOptions: options.bodyParserOptions ?? {},
       errorHandler: options.errorHandler ?? true,
       logging: options.logging ?? true,
+      helmet: options.helmet ?? serverConfig.helmet?.enabled ?? true,
+      helmetOptions: options.helmetOptions ?? serverConfig.helmet?.options ?? {},
       middlewares: options.middlewares ?? [],
       prefix: options.prefix ?? serverConfig.prefix ?? '',
     };
@@ -173,7 +199,12 @@ export class KiqHttpApplication {
   }
 
   private setupMiddlewares(): void {
-    // Error handler (first)
+    // Helmet security headers (first for security)
+    if (this.options.helmet) {
+      this.app.use(helmet(this.options.helmetOptions));
+    }
+
+    // Error handler
     if (this.options.errorHandler) {
       this.app.use(this.createErrorHandler());
     }
