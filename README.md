@@ -49,13 +49,14 @@ export class AppConfig {
   database() {
     return new Database({
       host: this.dbHost,
-      port: this.dbPort
+      port: this.dbPort,
     });
   }
 }
 ```
 
 **Documentation:**
+
 - [Configuration Management](./packages/core/CONFIGURATION.md)
 - [Resource Loader](./packages/core/RESOURCE-LOADER.md)
 - [Profile-based Activation](./packages/core/PROFILES.md)
@@ -65,7 +66,14 @@ export class AppConfig {
 HTTP framework with REST decorators.
 
 ```typescript
-import { RestController, GetMapping, PostMapping, PathVariable, RequestBody, Valid } from '@kiqjs/http';
+import {
+  RestController,
+  GetMapping,
+  PostMapping,
+  PathVariable,
+  RequestBody,
+  Valid,
+} from '@kiqjs/http';
 
 @RestController('/users')
 export class UserController {
@@ -84,6 +92,7 @@ export class UserController {
 ```
 
 **Documentation:**
+
 - [HTTP Decorators](./packages/http/README.md)
 - [DTO Validation](./packages/http/DTO_VALIDATION.md)
 
@@ -172,6 +181,7 @@ new Application().run().catch(console.error);
 ```
 
 **Configuration (resources/application.yml):**
+
 ```yaml
 kiq:
   profiles:
@@ -183,11 +193,13 @@ app:
 ```
 
 **Run:**
+
 ```bash
 ts-node src/Application.ts
 ```
 
 **Key Points:**
+
 - Simple bootstrap: `new Application().run().catch(console.error)`
 - `runApplication()` scans and registers all components automatically
 - Resolve dependencies with `container.get(ServiceName)`
@@ -196,6 +208,7 @@ ts-node src/Application.ts
 **Examples:**
 
 1. **CLI Tool** - [examples/cli-tool](./examples/cli-tool)
+
    - Configuration management with `@Value`
    - Profile-based components with `@Profile`
    - Resource loading with `ResourceLoader`
@@ -352,11 +365,13 @@ export class MyService {
 ```
 
 **Priority:**
+
 1. Environment variables (highest)
 2. `resources/application-{profile}.yml`
 3. `resources/application.yml`
 
 **Environment variable override:**
+
 ```bash
 SERVER_PORT=8080 node app.js
 ```
@@ -383,7 +398,7 @@ export class ProdLogger {
 }
 
 @Service()
-@Profile('!production')  // All except production
+@Profile('!production') // All except production
 export class DebugService {}
 ```
 
@@ -444,10 +459,7 @@ export class UserController {
   }
 
   @PutMapping('/:id')
-  async update(
-    @PathVariable('id') id: string,
-    @RequestBody() @Valid() dto: UpdateUserDto
-  ) {
+  async update(@PathVariable('id') id: string, @RequestBody() @Valid() dto: UpdateUserDto) {
     return this.userService.update(id, dto);
   }
 
@@ -501,7 +513,7 @@ export class DatabaseConfig {
     return new DataSource({
       host: this.host,
       port: this.port,
-      database: 'myapp'
+      database: 'myapp',
     });
   }
 
@@ -534,6 +546,7 @@ Check [examples/cli-tool](./examples/cli-tool) for a complete CLI application:
 - **Logging Service**: Configurable logging with different levels and formats
 
 Run:
+
 ```bash
 cd examples/cli-tool
 pnpm install
@@ -551,6 +564,7 @@ Check [examples/daemon-worker](./examples/daemon-worker) for a long-running work
 - **Docker/K8s Ready**: Perfect for containerized deployments
 
 Run:
+
 ```bash
 cd examples/daemon-worker
 pnpm install
@@ -569,6 +583,7 @@ Check [examples/thread-architecture](./examples/thread-architecture) for a compl
 - **Resource loading** (templates, configs)
 
 Run:
+
 ```bash
 cd examples/thread-architecture
 pnpm install
@@ -631,7 +646,3 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
-
-## Author
-
-Built for the Node.js/TypeScript ecosystem.
