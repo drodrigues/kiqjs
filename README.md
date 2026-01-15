@@ -114,6 +114,66 @@ pnpm add @kiqjs/core @kiqjs/http @kiqjs/repository
 
 ## Quick Start
 
+### Using @kiqjs/core Only (CLI/Background Tasks)
+
+For applications that don't need HTTP (CLI tools, background workers, scheduled tasks):
+
+```typescript
+// src/services/TaskService.ts
+import { Service, Value, PostConstruct } from '@kiqjs/core';
+
+@Service()
+export class TaskService {
+  @Value('app.name')
+  private appName: string;
+
+  @PostConstruct()
+  init() {
+    console.log(`${this.appName} - Task Service initialized`);
+  }
+
+  async processTask(data: any) {
+    console.log('Processing task:', data);
+    // Your business logic here
+  }
+}
+
+// src/Application.ts
+import { KiqApplication, runApplication } from '@kiqjs/core';
+import { TaskService } from './services/TaskService';
+
+@KiqApplication()
+class Application {
+  async run() {
+    const container = await runApplication(Application);
+    const taskService = container.get(TaskService);
+
+    // Run your tasks
+    await taskService.processTask({ id: 1, name: 'Example' });
+
+    console.log('Application completed!');
+  }
+}
+
+new Application().run().catch(console.error);
+```
+
+**Configuration (resources/application.yml):**
+```yaml
+app:
+  name: My CLI Tool
+  version: 1.0.0
+```
+
+**Run:**
+```bash
+ts-node src/Application.ts
+```
+
+See [examples/cli-tool](./examples/cli-tool) for a complete example.
+
+### Using @kiqjs/http (Web Applications)
+
 ### 1. Project Structure
 
 ```
