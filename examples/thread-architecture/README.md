@@ -1,41 +1,69 @@
 # THREAD Architecture Example
 
-**Arquitetura de Software Orientada a Domínio, Produto e Execução**
+**Domain-Driven, Product-Oriented, and Execution-Focused Software Architecture**
 
-Este exemplo demonstra como implementar a **THREAD Architecture** usando **KiqJS** com decorators, YAML configuration, profile-based activation, e resource loading.
+This example demonstrates how to implement **THREAD Architecture** using **KiqJS** with decorators, YAML configuration, profile-based activation, and resource loading.
 
-## O que é THREAD Architecture?
+## Quick Start
 
-A THREAD Architecture é um padrão arquitetural que prioriza:
+```bash
+# Install dependencies
+pnpm install
 
-- **Domínio explícito no código** - Regras de negócio claras e isoladas
-- **Entregas verticais** - Features completas do início ao fim
-- **Eventos como linguagem** - Comunicação desacoplada
-- **Nomes claros** - Responsabilidade óbvia de cada arquivo
-- **Uma razão para mudar** - Single Responsibility Principle na prática
+# Run development server
+pnpm dev
 
-## Estrutura do Projeto
+# Test the API
+curl http://localhost:3000/api/users
+```
+
+The example includes a complete user management feature with:
+
+- RESTful endpoints (`@RestController`, `@GetMapping`, `@PostMapping`, etc.)
+- DTO validation with `@Valid()` and class-validator
+- Domain-driven design with pure entities
+- Event publishing and profile-based logging
+- YAML configuration with `@Value()` injection
+- Resource loading (email templates)
+- Type-safe error handling with Result pattern
+
+## What is THREAD Architecture?
+
+THREAD Architecture is an architectural pattern that prioritizes:
+
+- **Explicit Domain in Code** - Clear and isolated business rules
+- **Vertical Delivery** - Complete features from start to finish
+- **Events as Language** - Decoupled communication
+- **Clear Names** - Obvious responsibility of each file
+- **One Reason to Change** - Single Responsibility Principle in practice
+
+## Project Structure
 
 ```
 thread-architecture/
 ├── resources/                              # Resources folder
 │   ├── application.yml                     # Base configuration
 │   ├── application-development.yml         # Dev profile config
-│   ├── application-production.yml          # Prod profile config
+│   ├── application-production.yml          # Prod profile config (optional)
 │   └── templates/                          # Email templates
 │       └── welcome-email.html
 ├── src/
-│   ├── Application.ts                      # Entry point
+│   ├── Application.ts                      # Entry point with KiqHttpApplication
 │   ├── config/
-│   │   └── AppConfig.ts                    # Configuration class with @Bean
-│   ├── domains/
-│   │   └── User.ts                         # Pure domain entity
+│   │   └── AppConfig.ts                    # Configuration class with @Value and @Bean
+│   ├── core/
+│   │   └── DomainEvent.ts                  # Base domain event interface
+│   ├── domains/                            # Pure domain layer
+│   │   ├── User.ts                         # User entity with business rules
+│   │   └── UserRepository.ts               # In-memory repository implementation
 │   └── features/
 │       └── user/                           # Vertical feature slice
-│           ├── UserDto.ts                  # Data transfer objects
-│           ├── UserRepository.ts           # Persistence layer
-│           ├── UserService.ts              # Business logic
-│           ├── UserHttpController.ts       # HTTP endpoints
+│           ├── UserDto.ts                  # Data transfer objects with validation
+│           ├── UserService.ts              # Business orchestration layer
+│           ├── UserHttpController.ts       # HTTP endpoints with REST decorators
+│           ├── UserEventPublisher.ts       # Event publishing
+│           ├── UserCreatedEvent.ts         # User created domain event
+│           ├── UserUpdatedEvent.ts         # User updated domain event
 │           ├── UserLogger.ts               # Profile-based loggers
 │           └── TemplateService.ts          # Resource loading example
 ├── package.json
@@ -132,12 +160,8 @@ export class TemplateService {
 
   renderWelcomeEmail(username: string, email: string) {
     // Load template from resources/templates/
-    const template = this.resourceLoader.getResourceAsString(
-      'templates/welcome-email.html'
-    );
-    return template
-      .replace('{{username}}', username)
-      .replace('{{email}}', email);
+    const template = this.resourceLoader.getResourceAsString('templates/welcome-email.html');
+    return template.replace('{{username}}', username).replace('{{email}}', email);
   }
 }
 ```
@@ -165,10 +189,7 @@ export class UserHttpController {
   @GetMapping('/:id/welcome-email')
   async getWelcomeEmail(@PathVariable('id') id: string) {
     const user = await this.userService.getUserById(id);
-    const html = this.templateService.renderWelcomeEmail(
-      user.name,
-      user.email
-    );
+    const html = this.templateService.renderWelcomeEmail(user.name, user.email);
     return { subject: 'Welcome!', html };
   }
 }
@@ -192,13 +213,14 @@ export class CreateUserDto {
 
 ## Layers and Responsibilities
 
-### `domains/` - Pure Business Model
+### `domains/` - Domain Layer
 
-Contains **entities**, **value objects**, and **invariant rules**.
+Contains **entities**, **value objects**, **invariant rules**, and **repository implementations**.
 
-- No framework dependencies
-- No database dependencies
-- Pure domain logic
+The domain layer includes:
+
+- **Domain entities** with business logic (User.ts)
+- **Repository implementations** for data access (UserRepository.ts)
 
 ```typescript
 // domains/User.ts
@@ -207,25 +229,66 @@ export class User {
     if (this.status !== UserStatus.PENDING) {
       throw new Error('Only pending users can be activated');
     }
-    return new User(/* ... */, UserStatus.ACTIVE, /* ... */);
+    return new User(this.id, this.name, this.email, UserStatus.ACTIVE, this.createdAt);
+  }
+
+  deactivate(): User {
+    if (this.status !== UserStatus.ACTIVE) {
+      throw new Error('Only active users can be deactivated');
+    }
+    return new User(this.id, this.name, this.email, UserStatus.INACTIVE, this.createdAt);
+  }
+}
+```
+
+```typescript
+// domains/UserRepository.ts
+@Service()
+export class UserRepository {
+  private users = new Map<string, User>();
+
+  async findById(id: string): Promise<User | null> {
+    return this.users.get(id) || null;
+  }
+
+  async save(user: User): Promise<User> {
+    this.users.set(user.id, user);
+    return user;
   }
 }
 ```
 
 ### `features/<feature>/` - Vertical Feature Slices
 
-Each **feature** is a **complete vertical slice**:
+Each **feature** is a **complete vertical slice** containing:
 
-- HTTP Controller → Service → Repository → Events
-- One file per responsibility
-- File name clearly indicates its function
+- **HTTP Controller** - REST endpoints with decorators
+- **Service** - Business orchestration and coordination
+- **DTOs** - Data transfer objects with validation
+- **Events** - Domain events for communication
+- **Event Publisher** - Event publishing logic
+- **Profile-based components** - Environment-specific implementations
 
 ```typescript
 // features/user/UserHttpController.ts
 @RestController('/users')
 export class UserHttpController {
+  constructor(
+    private readonly userService: UserService,
+    private readonly templateService: TemplateService
+  ) {}
+
   @PostMapping()
   async createUser(@RequestBody() @Valid() dto: CreateUserDto) {
+    const result = await this.userService.createUser(dto);
+    if (!result.success) {
+      throw BadRequest(result.error);
+    }
+    return toResponse(result.data);
+  }
+
+  @GetMapping('/:id')
+  async getUserById(@PathVariable('id') id: string) {
     // ...
   }
 }
@@ -277,17 +340,21 @@ Resources folder for:
 ```
 HTTP Request
     ↓
-UserHttpController        ← HTTP Entry
+UserHttpController        ← HTTP Entry (features/user/)
+    ↓  (validates DTO with @Valid)
     ↓
-UserService               ← Orchestration + Business Rules
+UserService               ← Orchestration + Business Logic (features/user/)
     ↓
-User (Domain)             ← Domain Validations
+User (Domain)             ← Domain Rules & Validations (domains/)
     ↓
-UserRepository            ← Persistence
+UserRepository            ← Persistence (domains/)
     ↓
-UserEventPublisher        ← Event Publishing
+UserEventPublisher        ← Event Publishing (features/user/)
+    ↓  (publishes UserCreatedEvent, UserUpdatedEvent)
     ↓
-Kafka/Redis (future)
+UserLogger                ← Profile-based logging (features/user/)
+    ↓
+Console/External Service (depending on active profile)
 ```
 
 ## Naming Convention
@@ -307,32 +374,38 @@ All files follow **PascalCase** with suffix indicating responsibility:
 ### Development Mode
 
 ```bash
-# Install dependencies
+# From the monorepo root or example directory
 pnpm install
 
-# Run in development mode (kiqjs.profiles.active=development)
+# Run in development mode (default profile: development)
 pnpm dev
 ```
 
-The server will start at `http://localhost:3000`
+The server will start at `http://localhost:3000` with:
+
+- Hot reload enabled (nodemon + ts-node)
+- Development logger active
+- Debug utilities enabled
 
 ### Production Mode
 
 ```bash
-# Build
+# Build TypeScript to JavaScript
 pnpm build
 
-# Run in production mode
-NODE_ENV=production node dist/Application.js
+# Run with production profile
+KIQJS_PROFILES_ACTIVE=production node dist/Application.js
 ```
 
-Or set in `resources/application.yml`:
+Or configure the active profile in `resources/application.yml`:
 
 ```yaml
 spring:
   profiles:
     active: production
 ```
+
+Environment variables take precedence over YAML configuration.
 
 ## Available Endpoints
 
@@ -395,6 +468,7 @@ curl http://localhost:3000/api/users/1/welcome-email
 ```
 
 This endpoint demonstrates:
+
 - Resource loading from `resources/templates/`
 - Template rendering
 - Integration with domain entities
@@ -403,39 +477,91 @@ This endpoint demonstrates:
 
 ### 1. Domain Above Framework
 
+Domain entities are pure TypeScript classes without framework dependencies:
+
 ```typescript
-// Good: Pure domain
-class User {
-  activate(): User { /* ... */ }
+// Good: Pure domain entity
+export class User {
+  constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public readonly email: string,
+    public readonly status: UserStatus,
+    public readonly createdAt: Date
+  ) {}
+
+  activate(): User {
+    if (this.status !== UserStatus.PENDING) {
+      throw new Error('Only pending users can be activated');
+    }
+    return new User(this.id, this.name, this.email, UserStatus.ACTIVE, this.createdAt);
+  }
 }
 
 // Bad: Domain coupled to framework
-class User extends KoaModel { /* ... */ }
+class User extends FrameworkModel {
+  @Column() name!: string;
+}
 ```
 
 ### 2. Vertical Delivery Always
 
-Each feature contains **everything** it needs:
-- Controller (HTTP)
-- Service (Business)
-- Repository (Data)
-- Events (Communication)
-- DTOs (Transfer)
-- Loggers (Observability)
+Each feature is **self-contained** with all necessary components:
+
+```
+features/user/
+├── UserHttpController.ts    # HTTP layer
+├── UserService.ts            # Business layer
+├── UserDto.ts                # Data contracts
+├── UserEventPublisher.ts     # Event communication
+├── UserCreatedEvent.ts       # Domain events
+├── UserUpdatedEvent.ts       # Domain events
+├── UserLogger.ts             # Observability
+└── TemplateService.ts        # Feature utilities
+```
+
+The domain layer (repository and entities) lives separately in `domains/` to ensure domain isolation.
 
 ### 3. Single Responsibility
 
-Each file has **one responsibility**:
-- `UserHttpController` - Only handles HTTP
-- `UserService` - Only orchestrates business logic
-- `UserRepository` - Only persists data
-- `UserLogger` - Only logs events
+Each file has **one clear responsibility**:
+
+| File                    | Responsibility                 |
+| ----------------------- | ------------------------------ |
+| `UserHttpController.ts` | HTTP request/response handling |
+| `UserService.ts`        | Business logic orchestration   |
+| `UserRepository.ts`     | Data persistence               |
+| `UserEventPublisher.ts` | Event publishing               |
+| `UserLogger.ts`         | Logging implementation         |
+| `TemplateService.ts`    | Template rendering             |
+| `User.ts`               | Domain entity and rules        |
+| `UserDto.ts`            | Data transfer and validation   |
 
 ### 4. Events as Language
 
+Communication between components happens through well-defined domain events:
+
 ```typescript
-// System communicates via events
-await this.publisher.publishUserCreated(new UserCreatedEvent(user));
+// Service orchestrates and publishes events
+@Service()
+export class UserService {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userEventPublisher: UserEventPublisher
+  ) {}
+
+  async createUser(dto: CreateUserDto): Promise<Result<User, string>> {
+    const user = new User(/* ... */);
+    await this.userRepository.save(user);
+
+    // Publish domain event
+    await this.userEventPublisher.publishUserCreated(
+      new UserCreatedEvent(user.id, user.name, user.email, user.createdAt)
+    );
+
+    return success(user);
+  }
+}
 ```
 
 ### 5. Names are Contracts
@@ -458,9 +584,9 @@ await this.publisher.publishUserCreated(new UserCreatedEvent(user));
 
 **AI-friendly** - Easy indexing and analysis
 
-## Comparison: Before vs. After
+## Comparison: Traditional vs. THREAD Architecture
 
-### Traditional Structure
+### Traditional Layered Structure
 
 ```
 src/
@@ -472,30 +598,54 @@ src/
 │   ├── UserService.ts
 │   ├── OrderService.ts
 │   └── ProductService.ts
-└── repositories/
-    ├── UserRepository.ts
-    └── ...
+├── repositories/
+│   ├── UserRepository.ts
+│   ├── OrderRepository.ts
+│   └── ProductRepository.ts
+└── models/
+    ├── User.ts
+    ├── Order.ts
+    └── Product.ts
 ```
 
-**Problem**: Features scattered across multiple folders
+**Problems**:
+
+- Features scattered across multiple folders
+- Hard to understand feature scope
+- Changes require navigating many directories
+- Difficult to extract features to microservices
 
 ### THREAD Architecture
 
 ```
 src/
+├── domains/
+│   ├── User.ts                    # Pure domain entities
+│   └── UserRepository.ts          # Persistence abstraction
 ├── features/
-│   ├── user/
+│   ├── user/                      # Everything user-related
 │   │   ├── UserHttpController.ts
 │   │   ├── UserService.ts
-│   │   ├── UserRepository.ts
+│   │   ├── UserDto.ts
+│   │   ├── UserEventPublisher.ts
+│   │   ├── UserCreatedEvent.ts
+│   │   ├── UserUpdatedEvent.ts
 │   │   └── UserLogger.ts
-│   ├── order/
-│   │   ├── OrderHttpController.ts
-│   │   ├── OrderService.ts
-│   │   └── OrderRepository.ts
+│   └── order/                     # Everything order-related
+│       ├── OrderHttpController.ts
+│       ├── OrderService.ts
+│       └── ...
+└── config/
+    └── AppConfig.ts               # Cross-cutting configuration
 ```
 
-**Advantage**: Complete feature in one place
+**Advantages**:
+
+- Complete feature in one folder
+- Easy to understand feature boundaries
+- Simple to navigate and maintain
+- Ready for microservice extraction
+- Clear separation between domain and features
 
 ## Configuration Profiles
 
@@ -512,6 +662,7 @@ logging:
 ```
 
 Components active in development:
+
 - `DevelopmentUserLogger` - Verbose logging
 - `DebugUserLogger` - Debug utilities
 
@@ -532,43 +683,94 @@ logging:
 ```
 
 Components active in production:
+
 - `ProductionUserLogger` - Minimal logging, sends to monitoring
 
 ## Testing
 
-The architecture makes testing straightforward:
+The architecture makes testing straightforward thanks to dependency injection:
 
 ```typescript
 describe('UserService', () => {
-  it('should create user', () => {
-    const repo = new InMemoryUserRepository();
-    const service = new UserService(repo, eventPublisher);
+  it('should create user successfully', async () => {
+    // Arrange - Create test doubles
+    const mockRepository = new MockUserRepository();
+    const mockEventPublisher = new MockUserEventPublisher();
+    const service = new UserService(mockRepository, mockEventPublisher);
 
+    // Act
     const result = await service.createUser({
-      name: 'Test',
-      email: 'test@example.com'
+      name: 'Test User',
+      email: 'test@example.com',
     });
 
+    // Assert
     expect(result.success).toBe(true);
+    expect(result.data.name).toBe('Test User');
+    expect(mockEventPublisher.publishedEvents).toHaveLength(1);
+  });
+
+  it('should fail when email already exists', async () => {
+    // Arrange
+    const mockRepository = new MockUserRepository();
+    await mockRepository.save(
+      new User('1', 'Existing', 'test@example.com', UserStatus.ACTIVE, new Date())
+    );
+    const service = new UserService(mockRepository, new MockUserEventPublisher());
+
+    // Act
+    const result = await service.createUser({
+      name: 'Test User',
+      email: 'test@example.com',
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('already exists');
+  });
+});
+
+describe('User Domain', () => {
+  it('should activate pending user', () => {
+    const user = new User('1', 'Test', 'test@example.com', UserStatus.PENDING, new Date());
+
+    const activated = user.activate();
+
+    expect(activated.status).toBe(UserStatus.ACTIVE);
+  });
+
+  it('should throw error when activating non-pending user', () => {
+    const user = new User('1', 'Test', 'test@example.com', UserStatus.ACTIVE, new Date());
+
+    expect(() => user.activate()).toThrow('Only pending users can be activated');
   });
 });
 ```
 
-## Next Steps
+## Key Takeaways
 
-For a complete production implementation, add:
+1. **Domain Isolation** - Domain entities (`User`) are pure TypeScript classes with no framework dependencies
+2. **Vertical Slicing** - Features are organized by business capability, not technical layers
+3. **Dependency Injection** - KiqJS automatically wires components using `@Service()`, `@RestController()`, etc.
+4. **Profile-based Configuration** - Different implementations for different environments using `@Profile()`
+5. **YAML Configuration** - External configuration with `@Value()` decorator injection
+6. **Resource Loading** - Load templates and static resources using `ResourceLoader`
+7. **DTO Validation** - Automatic request validation with `@Valid()` and class-validator
+8. **Result Pattern** - Type-safe error handling with `Result<T, E>` from `@kiqjs/http/dto`
+9. **Event-Driven** - Domain events enable loose coupling between components
+10. **Testable** - Constructor injection makes unit testing straightforward
 
-- Real Kafka/Redis integration
-- Database (PostgreSQL, MongoDB, etc)
-- Authentication/Authorization
-- Structured logging
-- Metrics and observability
-- Automated tests
-- CI/CD pipeline
-- Docker deployment
+## Next Steps for Production
 
-## References
+To evolve this example into a production-ready application:
 
-- [THREAD Architecture - Full Documentation](https://thread.com.br/architecture)
-- [KiqJS Documentation](../../README.md)
-- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- **Database Integration** - Replace in-memory repository with PostgreSQL, MongoDB, etc.
+- **Event Bus** - Integrate Kafka, RabbitMQ, or Redis for real event publishing
+- **Authentication** - Add JWT/OAuth with `@Authenticated()` decorator
+- **Authorization** - Implement role-based access control
+- **Structured Logging** - Use Winston or Pino for production logging
+- **Monitoring** - Add Prometheus metrics and APM tracing
+- **Testing** - Write unit, integration, and E2E tests
+- **CI/CD** - Set up automated builds and deployments
+- **Containerization** - Create Docker images and Kubernetes manifests
+- **API Documentation** - Generate OpenAPI/Swagger docs from decorators
