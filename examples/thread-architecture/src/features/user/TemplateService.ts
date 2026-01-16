@@ -2,11 +2,7 @@ import { ResourceLoader, Service } from '@kiqjs/core';
 
 @Service()
 export class TemplateService {
-  private resourceLoader: ResourceLoader;
-
-  constructor() {
-    this.resourceLoader = new ResourceLoader();
-  }
+  constructor(private readonly resourceLoader: ResourceLoader) {}
 
   renderWelcomeEmail(username: string, email: string, accountType: string = 'Standard'): string {
     const template = this.resourceLoader.getResourceAsString('templates/welcome-email.html');
