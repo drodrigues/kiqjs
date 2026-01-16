@@ -4,14 +4,14 @@ KiqJS Core supports YAML configuration files with profile support and environmen
 
 ## Features
 
-- 📄 **YAML Configuration Files**: Use `application.yml` in `resources/` folder
-- 🎯 **Profile Support**: Environment-specific configs with `application-{profile}.yml`
-- 🔧 **Environment Variables**: Override any config with env vars
-- 💉 **@Value Decorator**: Inject configuration values into your classes
-- 🌳 **Nested Properties**: Access nested config with dot notation
-- 🔍 **Auto-Detection**: Automatically finds `resources/` folder or falls back to project root
-- 🐳 **Docker-Friendly**: Clean separation for easy containerization
-- 🎨 **Multi-Purpose**: Resources folder can also hold templates, static files, etc.
+- **YAML Configuration Files**: Use `application.yml` in `resources/` folder
+- **Profile Support**: Environment-specific configs with `application-{profile}.yml`
+- **Environment Variables**: Override any config with env vars
+- **@Value Decorator**: Inject configuration values into your classes
+- **Nested Properties**: Access nested config with dot notation
+- **Auto-Detection**: Automatically finds `resources/` folder or falls back to project root
+- **Docker-Friendly**: Clean separation for easy containerization
+- **Multi-Purpose**: Resources folder can also hold templates, static files, etc.
 
 ## Quick Start
 
@@ -119,6 +119,7 @@ Configuration is loaded and merged in this order (later overrides earlier):
 3. Environment variables (highest priority)
 
 The active profile is determined by:
+
 - Explicit profile parameter
 - `NODE_ENV` environment variable
 - Defaults to `'development'`
@@ -136,10 +137,10 @@ This keeps your project organized.
 
 Environment variables can override any configuration value using uppercase underscore notation:
 
-| Configuration Key | Environment Variable |
-|-------------------|---------------------|
-| `server.port` | `SERVER_PORT` |
-| `database.host` | `DATABASE_HOST` |
+| Configuration Key         | Environment Variable      |
+| ------------------------- | ------------------------- |
+| `server.port`             | `SERVER_PORT`             |
+| `database.host`           | `DATABASE_HOST`           |
 | `features.userManagement` | `FEATURES_USERMANAGEMENT` |
 
 ### Example
@@ -210,7 +211,7 @@ export class AppService {
     return {
       name: this.appName,
       version: this.version,
-      analytics: this.analyticsEnabled
+      analytics: this.analyticsEnabled,
     };
   }
 }
@@ -297,11 +298,12 @@ CMD ["node", "dist/index.js"]
 ```
 
 Benefits:
-- ✅ Clean separation of concerns
-- ✅ Easy to override configs per environment
-- ✅ Smaller Docker layers
-- ✅ No root pollution
-- ✅ Can hold configs, templates, and static files
+
+- Clean separation of concerns
+- Easy to override configs per environment
+- Smaller Docker layers
+- No root pollution
+- Can hold configs, templates, and static files
 
 ## Best Practices
 
@@ -317,12 +319,14 @@ Benefits:
 ## Migration from process.env
 
 **Before:**
+
 ```typescript
 const port = parseInt(process.env.PORT || '3000', 10);
 const host = process.env.HOST || 'localhost';
 ```
 
 **After:**
+
 ```typescript
 @Value('server.port')
 port!: number;
@@ -332,6 +336,7 @@ host!: string;
 ```
 
 With `application.yml`:
+
 ```yaml
 server:
   port: 3000

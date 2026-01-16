@@ -4,12 +4,12 @@ KiqJS Core provides a `@Profile` decorator for activating components based on th
 
 ## Features
 
-- 🎯 **Profile-based Activation**: Components only load in specific profiles
-- 🔧 **Configuration-based**: Uses `kiq.profiles.active` from YAML
-- 🌍 **Environment Variable Support**: `KIQ_PROFILES` (highest priority) or `NODE_ENV`
-- ❗ **Negation Support**: Use `!production` to activate in all profiles except production
-- 📦 **Multiple Profiles**: Support for arrays like `['development', 'test']` and comma-separated env vars
-- 🏗️ **Works with All Decorators**: `@Service`, `@Component`, `@Configuration`, `@Repository`
+- **Profile-based Activation**: Components only load in specific profiles
+- **Configuration-based**: Uses `kiq.profiles.active` from YAML
+- **Environment Variable Support**: `KIQ_PROFILES` (highest priority) or `NODE_ENV`
+- **Negation Support**: Use `!production` to activate in all profiles except production
+- **Multiple Profiles**: Support for arrays like `['development', 'test']` and comma-separated env vars
+- **Works with All Decorators**: `@Service`, `@Component`, `@Configuration`, `@Repository`
 
 ## Quick Start
 
@@ -119,12 +119,12 @@ NODE_ENV=staging node dist/app.js
 **Important:** Decorators execute bottom-to-top, so `@Profile` must come **after** (below) the component decorator:
 
 ```typescript
-// ✅ Correct - @Profile executes first
+// Correct - @Profile executes first
 @Service()
 @Profile('development')
 export class MyService {}
 
-// ❌ Wrong - @Profile executes after @Service
+// Wrong - @Profile executes after @Service
 @Profile('development')
 @Service()
 export class MyService {}
@@ -205,7 +205,7 @@ export class DevelopmentConfig {
     return {
       host: 'localhost',
       port: 5432,
-      database: 'myapp_dev'
+      database: 'myapp_dev',
     };
   }
 }
@@ -218,7 +218,7 @@ export class ProductionConfig {
     return {
       host: process.env.DB_HOST,
       port: 5432,
-      database: 'myapp_prod'
+      database: 'myapp_prod',
     };
   }
 }
@@ -300,6 +300,7 @@ export class BetaFeatureService {
 ```
 
 **Parameters:**
+
 - `profiles`: Profile name(s) as string or array of strings
   - Single profile: `'development'`
   - Multiple profiles: `['development', 'test']` (OR logic)
@@ -307,6 +308,7 @@ export class BetaFeatureService {
 
 **Usage:**
 Must be placed **after** (below) component decorators:
+
 - `@Service()`
 - `@Component()`
 - `@Configuration()`
@@ -324,6 +326,7 @@ function isProfileActive(profileExpr: string | string[]): boolean;
 ```
 
 **Example:**
+
 ```typescript
 import { getActiveProfiles, isProfileActive } from '@kiqjs/core';
 
@@ -347,7 +350,7 @@ if (isProfileActive(['development', 'test'])) {
 # resources/application.yml
 kiq:
   profiles:
-    active: development  # Default profile
+    active: development # Default profile
 
 app:
   name: My Application
@@ -404,11 +407,11 @@ Components can match any of the active profiles:
 
 ```typescript
 @Service()
-@Profile('dev')  // Matches if 'dev' is in active profiles
+@Profile('dev') // Matches if 'dev' is in active profiles
 export class DevService {}
 
 @Service()
-@Profile('local')  // Matches if 'local' is in active profiles
+@Profile('local') // Matches if 'local' is in active profiles
 export class LocalService {}
 ```
 
@@ -449,11 +452,11 @@ spec:
   template:
     spec:
       containers:
-      - name: myapp
-        image: myapp:latest
-        env:
-        - name: KIQ_PROFILES
-          value: "production,monitoring,k8s"
+        - name: myapp
+          image: myapp:latest
+          env:
+            - name: KIQ_PROFILES
+              value: 'production,monitoring,k8s'
 ```
 
 ### CI/CD Example
@@ -482,21 +485,22 @@ services:
   app:
     build: .
     environment:
-      KIQ_PROFILES: "development,local"
+      KIQ_PROFILES: 'development,local'
     ports:
-      - "3000:3000"
+      - '3000:3000'
 
   app-production:
     build: .
     environment:
-      KIQ_PROFILES: "production,monitoring"
+      KIQ_PROFILES: 'production,monitoring'
     ports:
-      - "8080:8080"
+      - '8080:8080'
 ```
 
 ## Best Practices
 
 1. **Use Profiles for Environment Differences**
+
    ```typescript
    // Different database configs per environment
    @Configuration()
@@ -505,6 +509,7 @@ services:
    ```
 
 2. **Keep Debug Tools Out of Production**
+
    ```typescript
    @Service()
    @Profile('!production')
@@ -512,6 +517,7 @@ services:
    ```
 
 3. **Test with Mock Implementations**
+
    ```typescript
    @Service()
    @Profile('test')
@@ -519,6 +525,7 @@ services:
    ```
 
 4. **Document Profile Requirements**
+
    ```typescript
    /**
     * Production-only service
@@ -530,6 +537,7 @@ services:
    ```
 
 5. **Use Interface-Based Design**
+
    ```typescript
    interface Logger {
      log(msg: string): void;
@@ -613,7 +621,7 @@ export class ProdDatabaseConfig {
   dataSource() {
     return new DataSource({
       host: process.env.DB_HOST,
-      database: process.env.DB_NAME
+      database: process.env.DB_NAME,
     });
   }
 }
@@ -665,7 +673,7 @@ export class BetaFeatures {
   }
 
   canUseExperimentalAPI(): boolean {
-    return false;  // Disabled in prod
+    return false; // Disabled in prod
   }
 }
 ```
@@ -674,15 +682,15 @@ export class BetaFeatures {
 
 KiqJS `@Profile` is inspired by Spring Boot's `@Profile`:
 
-| Spring Boot | KiqJS |
-|-------------|-------|
-| `@Profile("dev")` | `@Profile('development')` |
-| `@Profile({"dev", "test"})` | `@Profile(['development', 'test'])` |
-| `@Profile("!prod")` | `@Profile('!production')` |
+| Spring Boot                                       | KiqJS                                             |
+| ------------------------------------------------- | ------------------------------------------------- |
+| `@Profile("dev")`                                 | `@Profile('development')`                         |
+| `@Profile({"dev", "test"})`                       | `@Profile(['development', 'test'])`               |
+| `@Profile("!prod")`                               | `@Profile('!production')`                         |
 | `spring.profiles.active` (application.properties) | `kiq.profiles.active` (resources/application.yml) |
-| `SPRING_PROFILES_ACTIVE` env var | `KIQ_PROFILES` env var |
-| `@Component @Profile("dev")` | `@Service() @Profile('development')` |
-| Multiple active profiles | Comma-separated in YAML or `KIQ_PROFILES` |
+| `SPRING_PROFILES_ACTIVE` env var                  | `KIQ_PROFILES` env var                            |
+| `@Component @Profile("dev")`                      | `@Service() @Profile('development')`              |
+| Multiple active profiles                          | Comma-separated in YAML or `KIQ_PROFILES`         |
 
 ## Troubleshooting
 
@@ -693,7 +701,7 @@ KiqJS `@Profile` is inspired by Spring Boot's `@Profile`:
 **Solution:** Check decorator order - `@Profile` must come **after** the component decorator:
 
 ```typescript
-// ✅ Correct
+// Correct
 @Service()
 @Profile('development')
 export class MyService {}
@@ -704,6 +712,7 @@ export class MyService {}
 **Problem:** Wrong profile is active.
 
 **Solution:** Check priority order (highest to lowest):
+
 1. `KIQ_PROFILES` environment variable
 2. `kiq.profiles.active` in `resources/application.yml`
 3. `NODE_ENV` environment variable
@@ -734,6 +743,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 ## Migration from Environment Variables
 
 **Before:**
+
 ```typescript
 if (process.env.NODE_ENV === 'production') {
   app.use(productionLogger);
@@ -743,6 +753,7 @@ if (process.env.NODE_ENV === 'production') {
 ```
 
 **After:**
+
 ```typescript
 @Service()
 @Profile('production')
@@ -754,11 +765,12 @@ export class DevelopmentLogger { ... }
 ```
 
 Benefits:
-- ✅ Cleaner code
-- ✅ Automatic registration
-- ✅ Type-safe dependency injection
-- ✅ Testable
-- ✅ Spring Boot familiar pattern
+
+- Cleaner code
+- Automatic registration
+- Type-safe dependency injection
+- Testable
+- Spring Boot familiar pattern
 
 ## Related Features
 
